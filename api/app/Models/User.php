@@ -8,11 +8,12 @@ use App\Models\Traits\Jwt;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, Jwt;
+    use HasFactory, Notifiable, Jwt, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -33,6 +34,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'profile',
     ];
 
     /**
@@ -40,11 +42,69 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
+    protected function casts(): array {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected $appends = [
+        'permissions', 
+        'menu', 
+        'profile_name'
+    ];
+
+    public function profile() {
+        return $this->belongsTo(Profile::class);
+    }
+
+    public function getProfileNameAttribute()
+    {
+        return $this->profile->nombre ?? null;
+    }
+
+    public function getPermissionsAttribute()
+    {
+        $appHeader = request()->header('App');
+        $permissions = [];
+
+        if ($this->profile && $this->profile->rol) {
+            foreach ($this->profile->rol->permissions as $permission) {
+                if ($permission->app === $appHeader) {
+                    $permissions[] = $permission->nombre;
+                }
+            }
+        }
+
+        return $permissions;
+    }
+
+    public function getMenuAttribute()
+    {
+        if ($this->profile->menu && $this->profile->menu->pages) {
+            $pages = $this->profile->menu->pages->load('parent');
+            $pagesGroup = $pages->groupBy('page_id');
+            
+            $menu = collect();
+            $subMenu = collect();
+
+            foreach ($pagesGroup as $group) {
+                foreach ($group as $children) {
+                    if ($children->parent) {
+                        $menu->push($children->parent);
+                    } else {
+                        $menu->push($children);
+                    }
+                    unset($children->parent, $children->pivot);
+                    $subMenu->push($children);
+                }
+            }
+            $menu = $menu->unique('id');
+            $menu->each(function ($parent) use ($subMenu) {
+                $parent->subMenu = $subMenu->where('page_id', $parent->id)->sortBy('order')->values();
+            });
+        }
+        return $menu->sortBy('order')->values()->all();
     }
 }

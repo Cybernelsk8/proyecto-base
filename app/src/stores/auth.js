@@ -16,7 +16,7 @@ export const useAuthStore = defineStore('auth', () => {
     
     const getCsrfCookie = async () => {
         try {
-            await axios.get('/nelson/csrf-cookie')
+            await axios.get('auth/csrf-cookie')
             return true
         } catch (error) {
             console.error('Failed to get CSRF cookie:', error)
@@ -34,7 +34,7 @@ export const useAuthStore = defineStore('auth', () => {
                 return false
             }
 
-            const response = await axios.post('login', credentials.value)
+            const response = await axios.post('auth/login', credentials.value)
             
             accessToken.value = response.data.access_token
             user.value = response.data.user

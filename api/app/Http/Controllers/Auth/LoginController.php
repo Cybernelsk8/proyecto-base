@@ -17,16 +17,16 @@ class LoginController extends Controller
     {
         // Validación de datos de entrada
         $request->validate([
-            'email' => ['required','email','exists:users,email'],
+            'cui' => ['required','digits:13','exists:users,cui'],
             'password' => 'required|string|min:8'
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('cui', $request->cui)->first();
 
         // Verificar la existencia del usuario y la contraseña
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Las credenciales proporcionadas son incorrectas.'],
+                'cui' => ['Las credenciales proporcionadas son incorrectas.'],
             ])->status(401); // 401 para credenciales incorrectas
         }
 
