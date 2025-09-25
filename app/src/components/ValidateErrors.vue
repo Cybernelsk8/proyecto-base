@@ -8,7 +8,7 @@
     })
 </script>
 <template>
-    <div class="text-red-500 font-semibold p-2 border-red-400 border rounded bg-red-200 my-4">
+    <div class="text-red-500 font-semibold p-2 border-red-400 border rounded-lg  my-4">
         <h1 class="text-lg">Ups! algo salio mal</h1>
         <ul class="list-disc ml-6 text-sm">
             <li v-for="error in props.errors">{{ error[0] }}</li>

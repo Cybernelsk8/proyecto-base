@@ -2,45 +2,36 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Default from '@/layouts/Default.vue'
 import { useAuthStore } from '@/stores/auth'
 
+const routes = [
+    {
+        path: '/',
+        component: Default,
+        meta: { requiresAuth: true },
+        children: [
+            { path: '', name: 'Home', component: () => import('@/views/Welcome.vue') }
+        ]
+    },
+    { path: '/login', name: 'Login', component: () => import('@/views/Login.vue') },
+    { path: '/:catchAll(.*)', component: () => import('@/views/NotFound.vue') }
+]
+
 const router = createRouter({
-	history: createWebHistory(import.meta.env.BASE_URL),
-	routes: [
-		{
-			path : '/',
-			component : Default,
-			meta : {
-				requiredAuth : true
-			},
-			children : [
-				{
-					path : '',
-					name : 'Home',
-					component : () => import('@/views/Welcome.vue')
-				}
-			]
-		},
-		{
-			path : '/login',
-			name : 'Login',
-			component : () => import('@/views/Login.vue')
-		},
-		{
-			//MANEJA TODAS LAS PAGINAS QUE NO EXISTEN Y LA REDIRIJE AL 404 NOT FOUND
-			path: '/:catchAll(.*)',
-			component: () => import('@/views/NotFound.vue'),
-		}
-	],
+    history: createWebHistory(import.meta.env.BASE_URL),
+    routes
 })
 
-router.beforeEach((to, from) => {
-	const auth = useAuthStore()
+router.beforeEach((to) => {
+    const authStore = useAuthStore()
 
-	if(to.meta.requiredAuth && !auth.isLoggedIn) {
-		return { name : 'Login' }
-	}else {
+    if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+        return { name: 'Login' }
+    }
 
-		return true 
-	}
+    if (to.name === 'Login' && authStore.isLoggedIn) {
+        return { name: 'Home' } // redirige a home si ya está logueado
+    }
+
+    return true
 })
 
 export default router

@@ -1,61 +1,76 @@
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
-import axios from 'axios' 
+import axios from '@/services/axios'
+import { handleError } from '@/helpers' // usamos tu servicio de axios ya configurado
 
 export const useAuthStore = defineStore('auth', () => {
-
-    const user = ref(null)
+    const user = ref(JSON.parse(localStorage.getItem('user')) || null)
     const accessToken = ref(localStorage.getItem('access_token') || null)
     const userPermissions = ref(JSON.parse(localStorage.getItem('user_permissions')) || [])
     const userMenu = ref(JSON.parse(localStorage.getItem('user_menu')) || [])
     const loading = ref(false)
     const credentials = ref({})
-
+    const errors = ref([])
 
     const isLoggedIn = computed(() => !!accessToken.value)
-    
+
+    // Mantener sincronizado con localStorage
+    watch(accessToken, (val) => {
+        if (val) {
+            localStorage.setItem('access_token', val)
+        } else {
+            localStorage.removeItem('access_token')
+        }
+    })
+
+    watch(user, (val) => {
+        if (val) {
+            localStorage.setItem('user', JSON.stringify(val))
+        } else {
+            localStorage.removeItem('user')
+        }
+    })
+
+    watch(userPermissions, (val) => {
+        localStorage.setItem('user_permissions', JSON.stringify(val))
+    })
+
+    watch(userMenu, (val) => {
+        localStorage.setItem('user_menu', JSON.stringify(val))
+    })
+
     const getCsrfCookie = async () => {
         try {
             await axios.get('auth/csrf-cookie')
             return true
         } catch (error) {
             console.error('Failed to get CSRF cookie:', error)
+            handleError(error)
             return false
         }
     }
 
     const login = async () => {
-
         loading.value = true
-
         try {
             const csrfSuccess = await getCsrfCookie()
-            if (!csrfSuccess) {
-                return false
-            }
+            if (!csrfSuccess) return false
 
             const response = await axios.post('auth/login', credentials.value)
-            
+
             accessToken.value = response.data.access_token
             user.value = response.data.user
+            userPermissions.value = response.data.user.permisos || []
+            userMenu.value = response.data.user.menu || []
+            credentials.value = {}
 
-            localStorage.setItem('access_token', accessToken.value)
-            localStorage.setItem('user', JSON.stringify(user.value))
-            
-            if (user.value.permisos) {
-                userPermissions.value = user.value.permisos
-                localStorage.setItem('user_permissions', JSON.stringify(userPermissions.value))
-            }
-            
-            if (user.value.menu) {
-                userMenu.value = user.value.menu
-                localStorage.setItem('user_menu', JSON.stringify(userMenu.value))
-            }
-            
             return true
-
         } catch (error) {
-            console.error('Login failed:', error)
+            errors.value = []
+            if(error.response.status == 422) {
+                errors.value = error.response.data.errors
+            }
+
             logout()
             return false
         } finally {
@@ -68,20 +83,19 @@ export const useAuthStore = defineStore('auth', () => {
         accessToken.value = null
         userPermissions.value = []
         userMenu.value = []
-        localStorage.clear()
     }
 
     return {
         user,
-        credentials,
         accessToken,
         userPermissions,
         userMenu,
         isLoggedIn,
+        credentials,
         loading,
-
+        errors,
         getCsrfCookie,
         login,
-        logout
+        logout,
     }
 })

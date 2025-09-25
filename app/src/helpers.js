@@ -131,26 +131,40 @@ export const formatVal = (value, type) => {
     return result
 }
 
+export const hasErrorField = (bagError, nameField ) => {
+    return bagError.hasOwnProperty(nameField)
+}
 
 export const handleError = (error) => {
-    if (error.response) {
-
-        const { status, data } = error.response
-
-        if (status === 422) {
-            setToast(data.message,'warning','ERROR DE VALIDACIÓN')
-            console.error('Error de validación:', data.errors)
-        } else if (status === 401) {
-            setToast(data.message,'danger','NO AUTORIZADO')
-            console.error('No autorizado:', data.message)
-        } else if (status === 404) {
-            setToast(data.message,'danger','RECURSO NO ENCONTRADO')
-            console.error('Recurso no encontrado:', data.message)
-        } else if (status >= 500) {
-            setToast(data.message,'danger','ERROR DEL SERVIDOR')
-            console.error('Error del servidor:', data.message)
-        }
-    } else {
+    if (!error.response) {
         console.error('No se recibió respuesta del servidor:', error.request)
+        setToast('No se pudo conectar con el servidor','danger','ERROR')
+        return
+    }
+
+    const { status, data } = error.response
+
+    switch (status) {
+        case 422:
+            setToast(data.message || 'Error de validación','warning','ERROR DE VALIDACIÓN')
+            console.error('Error de validación:', data.errors)
+            break
+        case 401:
+            setToast(data.message || 'No autorizado','danger','NO AUTORIZADO')
+            console.error('No autorizado',data.errors ?? 'No hay errores')
+            break
+        case 404:
+            setToast(data.message || 'Recurso no encontrado','danger','RECURSO NO ENCONTRADO')
+            console.error('Recurso no encontrado:', data.message)
+            break
+        default:
+            if (status >= 500) {
+                setToast(data.message || 'Error del servidor','danger','ERROR DEL SERVIDOR')
+                console.error('Error del servidor:', data.message)
+            } else {
+                setToast(data.message || 'Error desconocido','danger','ERROR')
+                console.error('Error desconocido:', data)
+            }
+            break
     }
 }

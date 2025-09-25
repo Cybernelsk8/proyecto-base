@@ -61,7 +61,7 @@ class User extends Authenticatable
 
     public function getProfileNameAttribute()
     {
-        return $this->profile->nombre ?? null;
+        return $this->profile->name ?? null;
     }
 
     public function getPermissionsAttribute()
@@ -72,7 +72,7 @@ class User extends Authenticatable
         if ($this->profile && $this->profile->rol) {
             foreach ($this->profile->rol->permissions as $permission) {
                 if ($permission->app === $appHeader) {
-                    $permissions[] = $permission->nombre;
+                    $permissions[] = $permission->name;
                 }
             }
         }

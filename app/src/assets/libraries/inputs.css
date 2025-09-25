@@ -1,0 +1,15 @@
+.label-input {
+    @apply flex gap-1 mb-2 text-sm font-medium;
+}
+
+.input{
+    @apply  border-none rounded-lg w-full ring-2 dark:placeholder-gray-400;
+}
+
+.input-primary {
+    @apply ring-gray-500 has-focus:ring-blue-500 focus:border-blue-500   dark:focus:ring-blue-500 dark:focus:border-blue-500;
+}
+
+.input-error {
+    @apply ring-red-500 text-red-500;
+}
