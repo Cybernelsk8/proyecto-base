@@ -57,7 +57,7 @@ const finalClass = computed(() =>
             <Icon v-if="icon && !iconRight" :icon="icon" />
 
             <!-- Texto -->
-            <span v-if="text">{{ text }}</span>
+            <span v-if="text" class="text-nowrap">{{ text }}</span>
 
             <!-- Icono derecho -->
             <Icon v-if="iconRight" :icon="iconRight" />

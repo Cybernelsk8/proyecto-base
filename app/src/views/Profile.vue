@@ -1,0 +1,160 @@
+<script setup>
+import Upload from '@/components/Upload.vue'
+import { hasErrorField } from '@/helpers'
+import { useProfileStore } from '@/stores/profile'
+import { onMounted } from 'vue'
+
+const store = useProfileStore()
+
+
+
+onMounted(() => {
+    store.fetch()
+})
+
+
+</script>
+<template>
+    <div v-if="!store.loading.fetch" class="grid grid-cols-1 px-4 pt-6 xl:grid-cols-3 xl:gap-4">
+        <div class="col-span-full xl:col-auto">
+            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+                <div class="items-center sm:flex xl:block 2xl:flex sm:space-x-4 xl:space-x-0 2xl:space-x-4">
+                    
+                    <img v-if="!store.change"
+                        class="mb-4 rounded-lg w-28 h-28 sm:mb-0 xl:mb-4 2xl:mb-0 object-cover object-center cursor-pointer" 
+                        :src="store.information.url_photo ?? 'https://ui-avatars.com/api/?name='+store.information.small_name+'&color=7F9CF5&background=EBF4FF'" 
+                        :alt="store.information.full_name"
+                    >
+                    <Upload v-if="store.change"
+                        accept="image/*" 
+                        @sendFile="store.getFile" 
+                        class="mb-4 rounded-lg w-28 h-28 sm:mb-0 xl:mb-4 2xl:mb-0" 
+                    />
+                    <div>
+                        <h3 class="mb-1 text-xl font-bold text-gray-900 dark:text-white">Profile picture</h3>
+                        <div class="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                            JPG, GIF or PNG. Max size of 800K
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <Button @click="store.change = !store.change" icon="arrows-rotate" class="btn-alternative" title="Upload image"/>
+                            <Button @click="store.uploadPhoto" icon="upload" class="btn-alternative" title="Upload picture" :loading="store.loading.upload" />
+                            <Button @click="store.deletePicture" icon="trash" class="btn-alternative" title="Delete picture" :loading="store.loading.delete"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+                <div class="flow-root">
+                    <h3 class="text-xl font-semibold dark:text-white">Sessions</h3>
+                    <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <li class="py-4">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-base font-semibold text-gray-900 truncate dark:text-white">
+                                        California 123.123.123.123
+                                    </p>
+                                    <p class="text-sm font-normal text-gray-500 truncate dark:text-gray-400">
+                                        Chrome on macOS
+                                    </p>
+                                </div>
+                                <div class="inline-flex items-center">
+                                    <a href="#" class="px-3 py-2 mb-3 mr-3 text-sm font-medium text-center text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-primary-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Revoke</a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="pt-4 pb-6">
+                            <div class="flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <svg class="w-6 h-6 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-base font-semibold text-gray-900 truncate dark:text-white">
+                                        Rome 24.456.355.98
+                                    </p>
+                                    <p class="text-sm font-normal text-gray-500 truncate dark:text-gray-400">
+                                        Safari on iPhone                                
+                                    </p>
+                                </div>
+                                <div class="inline-flex items-center">
+                                    <a href="#" class="px-3 py-2 mb-3 mr-3 text-sm font-medium text-center text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 focus:ring-4 focus:ring-primary-300 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700">Revoke</a>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div>
+                        <button class="text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">See more</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-span-2">
+            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+                <h3 class="mb-4 text-xl font-semibold dark:text-white">General information</h3>
+                <form @submit.prevent="store.update()">
+                    <div class="grid grid-cols-6 gap-6">
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="First name" icon="edit" maxlength="60" v-model="store.information.first_name" required  :error="hasErrorField(store.errors.info,'first_name')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Last name" icon="edit" maxlength="60" v-model="store.information.last_name" required  :error="hasErrorField(store.errors.info,'last_name')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Dpi" icon="address-card" maxlength="13" v-model="store.information.cui" required  :error="hasErrorField(store.errors.info,'cui')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Birthday" icon="cake" v-model="store.information.birthday" type="date" required  :error="hasErrorField(store.errors.info,'birthday')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Email" icon="envelope" v-model="store.information.email" type="email" required  :error="hasErrorField(store.errors.info,'email')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Phone" icon="phone" maxlength="8" minlength="8" v-model="store.information.phone" type="tel" required  :error="hasErrorField(store.errors.info,'phone')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="City" icon="city" maxlength="60" v-model="store.information.city" :error="hasErrorField(store.errors.info,'city')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Address" icon="location-dot" maxlength="255" v-model="store.information.address" :error="hasErrorField(store.errors.info,'address')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input label="Profile" icon="id-card-clip" v-model="store.information.profile_name" disabled/>
+                        </div>
+                        <div class="col-span-6 sm:col-full">
+                            <Button
+                                type="submit" 
+                                text="Save all" 
+                                icon="save" 
+                                class="btn-primary"
+                                :loading="store.loading.update"
+                            />
+                            <Validate-Errors v-if="store.errors.info != 0" :errors="store.errors.info" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+                <h3 class="mb-4 text-xl font-semibold dark:text-white">Password information</h3>
+                <form @submit.prevent="store.changePassword()">
+                    <div class="grid grid-cols-6 gap-6">
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input v-model="store.passwords.current" label="Current password" icon="key" type="password" placeholder="*******" required :error="hasErrorField(store.errors.pass,'current')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input v-model="store.passwords.new" label="New password" icon="lock" type="password" placeholder="*******" required :error="hasErrorField(store.errors.pass,'new')" />
+                        </div>
+                        <div class="col-span-6 sm:col-span-3">
+                            <Input v-model="store.passwords.new_confirmation" label="Confirm password" icon="lock" type="password" placeholder="*******" required />
+                        </div>
+                        <div class="col-span-6 sm:col-full">
+                            <Button type="submit" text="Save all" icon="save" class="btn-primary" :loading="store.loading.pass" />
+                        </div>
+                    </div>
+                </form>
+                <Validate-Errors v-if="store.errors.pass != 0" :errors="store.errors.pass" />
+            </div>
+        </div>
+    </div>
+</template>

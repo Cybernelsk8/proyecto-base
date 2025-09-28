@@ -6,6 +6,8 @@ namespace App\Models;
 
 use App\Models\Traits\Jwt;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
@@ -21,9 +23,10 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'username',
         'password',
+        'profile_id',
+        'deleted_at'
     ];
 
     /**
@@ -35,6 +38,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'profile',
+        'information'
     ];
 
     /**
@@ -49,23 +53,20 @@ class User extends Authenticatable
         ];
     }
 
-    protected $appends = [
-        'permissions', 
-        'menu', 
-        'profile_name'
-    ];
-
-    public function profile() {
+    public function profile() : BelongsTo {
         return $this->belongsTo(Profile::class);
     }
 
-    public function getProfileNameAttribute()
-    {
+    public function information() : HasOne {
+        return $this->hasOne(UserInformation::class);
+    }
+
+    public function getProfileNameAttribute() {
         return $this->profile->name ?? null;
     }
 
-    public function getPermissionsAttribute()
-    {
+    public function getPermissionsAttribute() {
+
         $appHeader = request()->header('App');
         $permissions = [];
 
@@ -80,8 +81,7 @@ class User extends Authenticatable
         return $permissions;
     }
 
-    public function getMenuAttribute()
-    {
+    public function getMenuAttribute() {
         if ($this->profile->menu && $this->profile->menu->pages) {
             $pages = $this->profile->menu->pages->load('parent');
             $pagesGroup = $pages->groupBy('page_id');
@@ -107,4 +107,13 @@ class User extends Authenticatable
         }
         return $menu->sortBy('order')->values()->all();
     }
+
+    public function getSmallNameAttribute() {
+        return $this->information?->small_name;
+    }
+
+    public function getUrlPhotoAttribute() {
+        return $this->information?->url_photo ?? null;
+    }
+
 }

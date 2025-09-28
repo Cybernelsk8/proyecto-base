@@ -42,20 +42,21 @@ export const getNestedValue = (obj, key) => {
     return obj
 }
 
-export const hasChanged = (obj1, obj2) => {
-    if (obj1 === obj2) return false
+export const hasChanged = (target, source) => {
+    
+    if (target === source) return false
            
-        if (obj1 === null || typeof obj1 !== 'object' || obj2 === null || typeof obj2 !== 'object') {
-            return obj1 !== obj2
+        if (target === null || typeof target !== 'object' || source === null || typeof source !== 'object') {
+            return target !== source
         }
         
-        const keys1 = Object.keys(obj1)
-        const keys2 = Object.keys(obj2)
+        const keys1 = Object.keys(target)
+        const keys2 = Object.keys(source)
           
         if (keys1.length !== keys2.length) return true
            
         for (let key of keys1) {
-            if (!keys2.includes(key) || hasChanged(obj1[key], obj2[key])) {
+            if (!keys2.includes(key) || hasChanged(target[key], source[key])) {
                 return true
             }
         }
@@ -136,6 +137,7 @@ export const hasErrorField = (bagError, nameField ) => {
 }
 
 export const handleError = (error) => {
+
     if (!error.response) {
         console.error('No se recibió respuesta del servidor:', error.request)
         setToast('No se pudo conectar con el servidor','danger','ERROR')
@@ -147,7 +149,7 @@ export const handleError = (error) => {
     switch (status) {
         case 422:
             setToast(data.message || 'Error de validación','warning','ERROR DE VALIDACIÓN')
-            console.error('Error de validación:', data.errors)
+            console.error('Error de validación:', data.errors ?? null)
             break
         case 401:
             setToast(data.message || 'No autorizado','danger','NO AUTORIZADO')

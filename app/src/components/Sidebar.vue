@@ -81,11 +81,11 @@ const handleLogout = () => {
         </div>
         <div class="absolute bottom-0 left-0 justify-center hidden w-full p-4 space-x-4 bg-white lg:flex dark:bg-gray-800" sidebar-bottom-menu="">
             <Drop-Down
-                :text="auth.user?.name ?? 'Sign in'"
-                img="https://flowbite.com/docs/images/people/profile-picture-5.jpg" 
+                :text="auth.user?.small_name ?? 'Sign in'"
+                :img="auth.user?.url_photo ?? 'https://ui-avatars.com/api/?name='+auth.user?.small_name+'&color=7F9CF5&background=EBF4FF'" 
                 icon-right="chevron-up" 
                 :items="[
-                    { label: 'Profile', icon: 'user', action: () => toggle() },
+                    { label: 'Profile', icon: 'user', action: () => router.push({ name : 'Profile'}) },
                     { label: 'Logout', icon: 'right-to-bracket', action: () => handleLogout() },
                 ]"
                 variant="btn-light"

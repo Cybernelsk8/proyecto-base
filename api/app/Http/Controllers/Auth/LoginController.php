@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -17,14 +18,14 @@ class LoginController extends Controller
     {
         // Validación de datos de entrada
         $request->validate([
-            'cui' => ['required','digits:13','exists:users,cui'],
+            'cui' => ['required','digits:13','exists:users,username'],
             'password' => 'required|string|min:8'
         ]);
 
-        $user = User::where('cui', $request->cui)->first();
+        $user = User::where('username', $request->cui)->whereNull('deleted_at')->first();
 
         // Verificar la existencia del usuario y la contraseña
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user  || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'cui' => ['Las credenciales proporcionadas son incorrectas.'],
             ])->status(401); // 401 para credenciales incorrectas
@@ -48,8 +49,13 @@ class LoginController extends Controller
             $accessToken = $user->createToken($payload, $aud);
             
             // // Cargar datos del usuario y sus relaciones
-            // $user->load('dependencia');
-            // $user->append('permisos', 'menu', 'perfil');
+            $user->append(
+                'permissions', 
+                'menu', 
+                'profile_name',
+                'small_name',
+                'url_photo',
+            );
 
             // Retornar el token y los datos del usuario en una respuesta JSON
             return response()->json([
@@ -71,15 +77,20 @@ class LoginController extends Controller
      */
     public function verifyAuth(Request $request)
     {
-        $user = $request->user(); // Accede al usuario establecido por el middleware
+        $user = Auth::user(); 
 
         if (!$user) {
             return response()->json(['message' => 'No se encontró el usuario.'], 404);
         }
         
         // Retorna los datos completos del usuario
-        $user->load('dependencia');
-        $user->append('permisos', 'menu', 'perfil');
+        $user->append(
+            'permissions', 
+            'menu', 
+            'profile_name',
+            'small_name',
+            'url_photo',
+        );
 
         return response()->json([
             'user' => $user->toArray()

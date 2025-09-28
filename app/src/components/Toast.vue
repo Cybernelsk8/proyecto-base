@@ -38,7 +38,14 @@
 </script>
 
 <template>
-    <div v-if="open" class="w-full max-w-xs min-w-sm p-3 text-gray-900 bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:text-gray-300">
+    <div v-if="open" 
+        class="w-full max-w-xs min-w-sm p-3 text-gray-900 bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:text-gray-300 border-2"
+        :class="{
+                    'border-blue-500'   : props.type === 'primary',
+                    'border-green-500'  : props.type === 'success',
+                    'border-red-500'    : props.type === 'danger',
+                    'border-orange-500' : props.type === 'warning',
+                }">
         <div class="flex items-center mb-2">
             <span class="mb-1 text-sm font-semibold text-gray-900 dark:text-white uppercase">{{ props.title }}</span>
             <button class="ms-auto -mx-1.5 -my-1.5 bg-white justify-center items-center shrink-0 text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700">

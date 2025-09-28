@@ -1,9 +1,9 @@
 import { ref, computed, watch } from 'vue'
 import { defineStore } from 'pinia'
 import axios from '@/services/axios'
-import { handleError } from '@/helpers' // usamos tu servicio de axios ya configurado
 
 export const useAuthStore = defineStore('auth', () => {
+
     const user = ref(JSON.parse(localStorage.getItem('user')) || null)
     const accessToken = ref(localStorage.getItem('access_token') || null)
     const userPermissions = ref(JSON.parse(localStorage.getItem('user_permissions')) || [])
@@ -14,7 +14,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     const isLoggedIn = computed(() => !!accessToken.value)
 
-    // Mantener sincronizado con localStorage
     watch(accessToken, (val) => {
         if (val) {
             localStorage.setItem('access_token', val)
@@ -45,7 +44,6 @@ export const useAuthStore = defineStore('auth', () => {
             return true
         } catch (error) {
             console.error('Failed to get CSRF cookie:', error)
-            handleError(error)
             return false
         }
     }
@@ -70,8 +68,26 @@ export const useAuthStore = defineStore('auth', () => {
             if(error.response.status == 422) {
                 errors.value = error.response.data.errors
             }
-
             logout()
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
+    const verifyAuth = async () => {
+        loading.value = true
+        try {
+            const response = await axios.get('auth/verify-auth')
+            user.value = response.data.user
+            userPermissions.value = response.data.user.permisos || []
+            userMenu.value = response.data.user.menu || []
+            return true
+        } catch (error) {
+            errors.value = []
+            if(error.response.status == 422) {
+                errors.value = error.response.data.errors
+            }
             return false
         } finally {
             loading.value = false
@@ -83,6 +99,7 @@ export const useAuthStore = defineStore('auth', () => {
         accessToken.value = null
         userPermissions.value = []
         userMenu.value = []
+        localStorage.clear()
     }
 
     return {
@@ -96,6 +113,7 @@ export const useAuthStore = defineStore('auth', () => {
         errors,
         getCsrfCookie,
         login,
+        verifyAuth,
         logout,
     }
 })

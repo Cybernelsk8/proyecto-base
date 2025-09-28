@@ -3,11 +3,11 @@
 }
 
 .input{
-    @apply  border-none rounded-lg w-full ring-2 dark:placeholder-gray-400;
+    @apply  border-none rounded-lg w-full ring-2 dark:placeholder-gray-400 ring-gray-500 dark:bg-gray-700 bg-gray-50;
 }
 
 .input-primary {
-    @apply ring-gray-500 has-focus:ring-blue-500 focus:border-blue-500   dark:focus:ring-blue-500 dark:focus:border-blue-500;
+    @apply has-focus:ring-blue-500 focus:border-blue-500   dark:focus:ring-blue-500 dark:focus:border-blue-500;
 }
 
 .input-error {

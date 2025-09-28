@@ -29,14 +29,13 @@ const handleLogin = async () => {
                 Iniciar sesión en la plataforma
             </h2>
             <form @submit.prevent="handleLogin" class="mt-8 space-y-6">
-                <Input v-model="auth.credentials.cui" label="Dpi" type="number" required :error="hasErrorField(auth.errors,'cui')"/>
-                <Input v-model="auth.credentials.password" label="Password" type="password" required :error="hasErrorField(auth.errors,'password')"/>
+                <Input v-model="auth.credentials.cui" label="Dpi" icon="address-card" type="text" pattern="^\d{13}$" required :error="hasErrorField(auth.errors,'cui')"/>
+                <Input v-model="auth.credentials.password" label="Password" icon="key" type="password" required :error="hasErrorField(auth.errors,'password')"/>
                 <Validate-Errors v-if="auth.errors != 0" :errors="auth.errors" />
                 <Button text="Inicia sesión en tu cuenta" type="submit" class="btn-primary" icon="door-open" :loading="auth.loading" />
                 <div class="text-sm font-medium text-gray-500 dark:text-gray-400">
                     No estas registrado ? <a class="text-primary-700 hover:underline dark:text-primary-500">Crear cuenta</a>
                 </div>
-
             </form>
         </div>
     </div>

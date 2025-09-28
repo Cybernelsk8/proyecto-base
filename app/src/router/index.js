@@ -6,13 +6,31 @@ const routes = [
     {
         path: '/',
         component: Default,
-        meta: { requiresAuth: true },
+        meta: { 
+            requiresAuth: true
+        },
         children: [
-            { path: '', name: 'Home', component: () => import('@/views/Welcome.vue') }
+            { 
+                path: '', 
+                name: 'Home', 
+                component: () => import('@/views/Welcome.vue') 
+            },
+            { 
+                path: 'profile', 
+                name: 'Profile', 
+                component: () => import('@/views/Profile.vue') 
+            },
         ]
     },
-    { path: '/login', name: 'Login', component: () => import('@/views/Login.vue') },
-    { path: '/:catchAll(.*)', component: () => import('@/views/NotFound.vue') }
+    { 
+        path: '/login', 
+        name: 'Login', 
+        component: () => import('@/views/Login.vue') 
+    },
+    { 
+        path: '/:catchAll(.*)', 
+        component: () => import('@/views/NotFound.vue') 
+    }
 ]
 
 const router = createRouter({
@@ -28,7 +46,7 @@ router.beforeEach((to) => {
     }
 
     if (to.name === 'Login' && authStore.isLoggedIn) {
-        return { name: 'Home' } // redirige a home si ya está logueado
+        return { name: 'Home' }
     }
 
     return true
