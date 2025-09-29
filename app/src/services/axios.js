@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
-import { handleError } from '@/helpers'
+import { handleError, setToast } from '@/helpers'
 
 
 axios.defaults.withCredentials = true
@@ -24,7 +24,8 @@ axios.interceptors.response.use(
             router.replace({ name: 'Login' })
         }
 
-        handleError(error)
+        // handleError(error)
+        setToast(error,'danger');
         
         return Promise.reject(error)
     }

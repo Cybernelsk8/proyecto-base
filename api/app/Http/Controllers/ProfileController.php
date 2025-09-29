@@ -13,6 +13,7 @@ class ProfileController extends Controller
         try {
             return response([
                 'information' => $user->information,
+                'sessions' => $user->sessions,
                 'message' => 'Load user successfully.'
             ]);
         } catch (\Throwable $th) {

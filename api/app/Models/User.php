@@ -53,6 +53,10 @@ class User extends Authenticatable
         ];
     }
 
+    public function sessions() {
+        return $this->hasMany(Session::class)->where('is_revoke',false);
+    }
+
     public function profile() : BelongsTo {
         return $this->belongsTo(Profile::class);
     }

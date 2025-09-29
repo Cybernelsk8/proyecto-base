@@ -79,7 +79,7 @@ const handleLogout = () => {
                 </li>
             </ul>
         </div>
-        <div class="absolute bottom-0 left-0 justify-center hidden w-full p-4 space-x-4 bg-white lg:flex dark:bg-gray-800" sidebar-bottom-menu="">
+        <div class="absolute bottom-0 left-0 justify-center w-full p-4 space-x-4 bg-white lg:flex dark:bg-gray-800" sidebar-bottom-menu="">
             <Drop-Down
                 :text="auth.user?.small_name ?? 'Sign in'"
                 :img="auth.user?.url_photo ?? 'https://ui-avatars.com/api/?name='+auth.user?.small_name+'&color=7F9CF5&background=EBF4FF'" 

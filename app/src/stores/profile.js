@@ -11,6 +11,7 @@ export const useProfileStore = defineStore('profile', () => {
     const router = useRouter()
 
     const information = ref({})
+    const sessions = ref([])
     const copy_information = ref({})
     const picture = ref(null)
     const change = ref(false)
@@ -45,6 +46,7 @@ export const useProfileStore = defineStore('profile', () => {
             const response = await axios.get('profile/' + auth.user.id)
             information.value = response.data.information
             copy_information.value = JSON.parse(JSON.stringify(response.data.information))
+            sessions.value = response.data.sessions
         } catch (error) {
             return false
         }finally {
@@ -152,6 +154,7 @@ export const useProfileStore = defineStore('profile', () => {
     return {
         information,
         copy_information,
+        sessions,
         change,
         passwords,
         modal,

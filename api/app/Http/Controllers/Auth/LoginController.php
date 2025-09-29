@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Session;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -55,6 +56,17 @@ class LoginController extends Controller
                 'profile_name',
                 'small_name',
                 'url_photo',
+            );
+
+            Session::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->header('user-agent'),
+                ],
+                [
+                    'last_activity' => now()
+                ]
             );
 
             // Retornar el token y los datos del usuario en una respuesta JSON

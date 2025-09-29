@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Session;
 use App\Services\Jwt\JsonWebToken;
 use App\Models\User;
 use Closure;
@@ -16,8 +17,7 @@ class JwtAuth
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
-    {
+    public function handle(Request $request, Closure $next): Response {
         $accessToken = $request->bearerToken();
         
         // Si no se encuentra ningún token, denegar el acceso
