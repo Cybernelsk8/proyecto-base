@@ -17,6 +17,8 @@ import DropDown from './components/DropDown.vue'
 import ValidateErrors from './components/ValidateErrors.vue'
 import Input from './components/Input.vue'
 import Modal from './components/Modal.vue'
+import Select from './components/Select.vue'
+import DataTableServerSide from './components/DataTable/DataTableServerSide.vue'
 
 const app = createApp(App)
 
@@ -27,8 +29,10 @@ library.add(fab)
 app.component('Icon',FontAwesomeIcon)
 .component('Button', Button)
 .component('Input',Input)
+.component('Select', Select)
 .component('Drop-Down',DropDown)
 .component('Modal',Modal)
+.component('DataTable-ServerSide',DataTableServerSide)
 .component('Validate-Errors',ValidateErrors)
 
 app.use(createPinia())

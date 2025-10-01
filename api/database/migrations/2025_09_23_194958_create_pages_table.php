@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
             $table->string('label');
-            $table->string('icon');
-            $table->string('route');
-            $table->integer('order');
+            $table->string('icon')->default('circle');
+            $table->string('route')->nullable();
+            $table->integer('order')->nullable();
             $table->boolean('state')->default(1);
             $table->foreignId('page_id')->nullable()->constrained();
             $table->enum('type',['header','parent','page'])->default('page');

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('address');
             $table->string('email')->unique();
             $table->enum('gender',['F','M'])->default('M');
-            $table->string('photo');
+            $table->string('photo')->nullable();
             $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });

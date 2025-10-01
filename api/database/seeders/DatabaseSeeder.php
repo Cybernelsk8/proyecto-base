@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Menu;
+use App\Models\Page;
 use App\Models\Profile;
 use App\Models\User;
 use App\Models\UserInformation;
@@ -18,6 +19,32 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // User::factory(10)->create();
+
+        Page::create([
+            'label' => 'Admin',
+            'icon' => 'building-shield',
+            'type' => 'parent',
+            'order' => 1,
+        ]);
+
+        Page::create([
+            'label' => 'Users',
+            'route' => 'Users',
+            'icon' => 'users',
+            'page_id' => 1,
+            'type' => 'page',
+            'order' => 1,
+        ]);
+
+        Page::create([
+            'label' => 'Pages',
+            'route' => 'Pages',
+            'icon' => 'globe',
+            'page_id' => 1,
+            'type' => 'page',
+            'order' => 2,
+        ]);
+
 
         Menu::create([
             'name' => 'Sysadmin'
@@ -51,9 +78,11 @@ class DatabaseSeeder extends Seeder
             'address' => '2 calle 1-02 zona 3 anexo Ruedita',
             'email' => 'nelson.o.vasquez@gmail.com',
             'gender' => 'M',
-            'photo' => 'nelson_vasquez.jpg',
             'user_id' => 1
         ]);
+
+        $menu = Menu::find(1);
+        $menu->pages()->sync([1,2,3]);
 
         
 

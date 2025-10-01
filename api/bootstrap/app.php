@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware(['api','jwt-auth'])
                 ->prefix('api')
                 ->group(__DIR__.'/../routes/profile.php');
+
+            Route::middleware(['api','jwt-auth'])
+                ->prefix('api/admin')
+                ->group(__DIR__.'/../routes/admin.php');
         }
     )
     ->withMiddleware(function (Middleware $middleware): void {

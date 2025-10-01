@@ -24,8 +24,7 @@ axios.interceptors.response.use(
             router.replace({ name: 'Login' })
         }
 
-        // handleError(error)
-        setToast(error,'danger');
+        handleError(error)
         
         return Promise.reject(error)
     }

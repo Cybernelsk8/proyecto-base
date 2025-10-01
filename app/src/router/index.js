@@ -13,13 +13,44 @@ const routes = [
             { 
                 path: '', 
                 name: 'Home', 
-                component: () => import('@/views/Welcome.vue') 
+                component: () => import('@/views/Welcome.vue'),
+                meta : {
+                    requiresAuth : true
+                } 
             },
             { 
                 path: 'profile', 
                 name: 'Profile', 
-                component: () => import('@/views/Profile.vue') 
+                component: () => import('@/views/Profile.vue'),
+                meta : {
+                    requiresAuth : true
+                } 
             },
+            { 
+                path: 'admin', 
+                meta : {
+                    requiresAuth : true
+                },
+                children : [
+                    { 
+                        path: 'users', 
+                        name: 'Users', 
+                        component: () => import('@/views/admin/Users.vue'),
+                        meta : {
+                            requiresAuth : true
+                        } 
+                    },
+                    { 
+                        path: 'pages', 
+                        name: 'Pages', 
+                        component: () => import('@/views/admin/Pages.vue'),
+                        meta : {
+                            requiresAuth : true
+                        } 
+                    },
+                ] 
+            },
+            
         ]
     },
     { 

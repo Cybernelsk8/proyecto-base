@@ -3,10 +3,10 @@ import { computed } from "vue"
 
 const props = defineProps({
     text: { type: String, default: "" },
-    size: { type: String, default: "md" }, // sm, md, lg
+    size: { type: String, default: "md" , validator : (val) => ['lg','md','sm','xs'].includes(val) }, 
     icon: { type: String, default: null },
     iconRight: { type: String, default: null },
-    img: { type: String, default: null }, // 👈 nueva prop para imagen
+    img: { type: String, default: null },
     type: { type: String, default: "button" },
     disabled: { type: Boolean, default: false },
     class: { type: String, default: "" },
@@ -36,8 +36,10 @@ const sizeClass = computed(() => {
             return "px-6 py-3 text-lg"
         case "md":
             return "px-5 py-2.5 text-base"
-        default: // sm
+        case "sm":
             return "px-3 py-2 text-sm"
+        default: // xs
+            return "px-2 py-0.5 text-sm"
     }
 })
 
@@ -47,7 +49,7 @@ const finalClass = computed(() =>
 </script>
 
 <template>
-    <button :id="id" :type="type" :class="['flex gap-2 items-center justify-center', finalClass]" :disabled="disabled || loading">
+    <button :id="id" :type="type" :class="['flex items-center justify-center', finalClass]" :disabled="disabled || loading">
         <!-- Normal content -->
         <span v-if="!loading" class="flex items-center gap-2">
             <!-- Imagen a la izquierda -->

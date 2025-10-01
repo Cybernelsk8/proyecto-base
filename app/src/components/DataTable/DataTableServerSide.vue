@@ -4,6 +4,8 @@
     import Table from '../Table.vue'
     import { onClickOutside } from '@vueuse/core'
     import { useGlobalStore } from '@/stores/global'
+    import LoadingBar from '../LoadingBar.vue'
+import { formatVal, getNestedValue } from '@/helpers'
 
     const global = useGlobalStore()
 
@@ -157,15 +159,6 @@
         fetch()
     }
 
-    const getObjectValue  = (object, key) => {
-        const keys = key.split('.')
-        return keys.reduce((value, currentKey) => {
-            return value && value[currentKey]
-        }, object)
-    }
-    
-
-
     const selected = () => {
         emits('selected',selectedItems.value)
     }
@@ -227,7 +220,7 @@
 </script>
 
 <template>
-    <div class="grid gap-5 w-full p-8 border border-gray-300 bg-white rounded-lg">
+    <div class="grid gap-5 w-full p-8 rounded-lg">
         <div class="flex justify-between items-center">
             <div class="flex gap-3 text-xs">
                 <span>Mostrar</span>
@@ -278,19 +271,19 @@
             </div>
         </div>
 
-        <Loading-Bar v-if="loading.fetch" class="h-1 bg-blue-300" />
+        <LoadingBar v-if="loading.fetch" class="h-1 bg-blue-300" />
         
         <Table id="export-table">
             <template #thead>
-                <tr class="bg-gray-50">
+                <tr>
                     <th v-if="props.multiselect"></th>
-                    <th v-for="(header,colIndex) in props.headers" @click="header.hidden ? () => {} : sort(header.key.toUpperCase())"
+                    <th scope="col" v-for="(header,colIndex) in props.headers" @click="header.hidden ? () => {} : sort(header.key.toUpperCase())"
                         @mouseenter="hoveredColumn = colIndex "
                         @mouseleave="hoveredColumn = null"
                         :align="header.align ?? 'left'"
                         :class="[
                             header.class ?? 'uppercase text-xs',
-                            hoveredColumn === colIndex  ? 'bg-gray-100' : '',
+                            hoveredColumn === colIndex  ? 'bg-gray-800' : '',
                         ]"
                         :width="header.width ?? 'auto'"
                         :key="header.key">
@@ -308,7 +301,7 @@
             </template>
             <template #tbody>
                 <slot name="tbody" :items="data">
-                    <tr v-for="(item,index) in data" class="hover:bg-gray-100" :class="{'bg-gray-100' : selectedItems.includes(item)}" >
+                    <tr v-for="(item,index) in data" class="hover:bg-gray-800" :class="{'bg-gray-100' : selectedItems.includes(item)}" >
                         <td v-if="props.multiselect">
                             <input @change="selected()" type="checkbox" class="hover:scale-125 cursor-pointer" v-model="selectedItems" :value="item">
                         </td>
@@ -322,7 +315,7 @@
                             :align="header.align ?? 'left'" >
 
                             <slot :name="header.key" :item="item">
-                                {{ global.typeValue(getObjectValue(item, header.key), header.type )}}
+                                {{ formatVal(getNestedValue(item, header.key), header.type )}}
                             </slot>
                         </td>
                     </tr>
@@ -351,7 +344,7 @@
             </div>
             <div></div>
         </div>
-        <Loading-Bar v-if="loading.fetch && pagination.per_page >= 25" class="h-1 bg-blue-300" />
+        <LoadingBar v-if="loading.fetch && pagination.per_page >= 25" class="h-1 bg-blue-300" />
     </div>
 </template>
 
@@ -359,11 +352,11 @@
     @reference 'tailwindcss';
     
     th {
-        @apply font-medium cursor-pointer px-2 py-4;
+        @apply px-6 py-3;
     }
 
     td {
-        @apply p-2;
+        @apply px-6 py-4;
     }
 
     .icon-btn {

@@ -32,14 +32,9 @@ export const checkIfCookieExists = (cookieName) => {
 
 export const getNestedValue = (obj, key) => {
     const keys = key.split('.')
-    for (const innerKey of keys) {
-        if (obj.hasOwnProperty(innerKey)) {
-            obj = obj[innerKey]
-        } else {
-            return null
-        }
-    }
-    return obj
+    return keys.reduce((value, currentKey) => {
+        return value && value[currentKey]
+    }, obj)
 }
 
 export const hasChanged = (target, source) => {

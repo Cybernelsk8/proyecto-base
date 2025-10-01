@@ -43,39 +43,39 @@ class UserInformation extends Model
     }
 
     public function getSmallNameAttribute() {
-        $full_name = trim($this->first_name . ' ' . $this->last_name);
+
+        $full_name = preg_replace('/\s+/', ' ', trim($this->first_name . ' ' . $this->last_name));
         $name_parts = explode(" ", $full_name);
-        
+
         if (count($name_parts) < 2) {
             return $full_name;
         }
-        
+
         $first_name = $name_parts[0];
-        $total_parts = count($name_parts);
-        
-        // Buscar preposiciones en los últimos apellidos
         $prepositions = ['de', 'del', 'la', 'los', 'las'];
-        
-        // Empezar desde el final para encontrar el apellido principal
-        for ($i = $total_parts - 2; $i >= 1; $i--) {
-            $current_part_lower = strtolower($name_parts[$i]);
-            
+        $last_name_parts = [];
+        $total_parts = count($name_parts);
+
+        for ($i = 1; $i < $total_parts; $i++) {
+            $current_part = $name_parts[$i];
+            $current_part_lower = strtolower($current_part);
+
             if (in_array($current_part_lower, $prepositions)) {
-                // Si encontramos una preposición, tomar desde aquí
-                $last_name = implode(' ', array_slice($name_parts, $i, $total_parts - $i));
-                return $first_name . ' ' . $last_name;
+                $last_name_parts[] = $current_part;
+                continue;
             }
-            
-            // Si no es preposición y estamos en el penúltimo o anterior, tomar este apellido
-            if ($i <= $total_parts - 2) {
-                $last_name = $name_parts[$i];
-                return $first_name . ' ' . $last_name;
-            }
+
+            $last_name_parts[] = $current_part;
+            break; 
         }
+
+        if (empty($last_name_parts)) {
+            return $first_name;
+        }
+
+        $first_last_name = implode(' ', $last_name_parts);
         
-        // Fallback: tomar el penúltimo elemento
-        $last_name = $name_parts[$total_parts - 2] ?? $name_parts[$total_parts - 1];
-        return $first_name . ' ' . $last_name;
+        return $first_name . ' ' . $first_last_name;
     }
     
     public function getProfileNameAttribute() {

@@ -1,6 +1,6 @@
 <script setup>
 import Upload from '@/components/Upload.vue'
-import { hasErrorField } from '@/helpers'
+import { formatVal, hasErrorField } from '@/helpers'
 import { useProfileStore } from '@/stores/profile'
 import { onMounted } from 'vue'
 
@@ -21,8 +21,8 @@ onMounted(() => {
                 <div class="items-center sm:flex xl:block 2xl:flex sm:space-x-4 xl:space-x-0 2xl:space-x-4">
                     
                     <img v-if="!store.change"
-                        class="mb-4 rounded-lg w-28 h-28 sm:mb-0 xl:mb-4 2xl:mb-0 object-cover object-center cursor-pointer" 
-                        :src="store.information.url_photo ?? 'https://ui-avatars.com/api/?name='+store.information.small_name+'&color=7F9CF5&background=EBF4FF'" 
+                        class="mb-4 rounded-lg w-28 h-28 sm:mb-0 xl:mb-4 2xl:mb-0 object-cover object-center" 
+                        :src="store.information.url_photo ?? `https://ui-avatars.com/api/?name=${store.information.small_name}&color=7F9CF5&background=EBF4FF`" 
                         :alt="store.information.full_name"
                     >
                     <Upload v-if="store.change"
@@ -37,7 +37,7 @@ onMounted(() => {
                         </div>
                         <div class="flex items-center space-x-4">
                             <Button @click="store.change = !store.change" icon="arrows-rotate" class="btn-alternative" title="Upload image"/>
-                            <Button @click="store.uploadPhoto" icon="upload" class="btn-alternative" title="Upload picture" :loading="store.loading.upload" />
+                            <Button @click="store.uploadPhoto" icon="upload" class="btn-alternative" title="Save picture" :loading="store.loading.upload" />
                             <Button @click="store.deletePicture" icon="trash" class="btn-alternative" title="Delete picture" :loading="store.loading.delete"/>
                         </div>
                     </div>
@@ -61,14 +61,13 @@ onMounted(() => {
                                     </p>
                                 </div>
                                 <div class="inline-flex items-center">
-                                    <Button text="Revoke" class="btn-alternative" />
+                                    <p class="text-sm font-normal text-gray-500 truncate dark:text-gray-400">
+                                        {{ formatVal(session.last_activity,'date') }}
+                                    </p>
                                 </div>
                             </div>
                         </li>
                     </ul>
-                    <div>
-                        <Button text="Revoke all" class="btn-primary" />
-                    </div>
                 </div>
             </div>
         </div>

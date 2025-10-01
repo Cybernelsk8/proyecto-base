@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Models\Traits\Jwt;
+use App\Models\Traits\Searchable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -15,7 +16,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, Jwt, HasRoles;
+    use HasFactory, Notifiable, Jwt, HasRoles, Searchable;
 
     /**
      * The attributes that are mass assignable.
@@ -91,7 +92,7 @@ class User extends Authenticatable
             $pagesGroup = $pages->groupBy('page_id');
             
             $menu = collect();
-            $subMenu = collect();
+            $childrens = collect();
 
             foreach ($pagesGroup as $group) {
                 foreach ($group as $children) {
@@ -101,12 +102,12 @@ class User extends Authenticatable
                         $menu->push($children);
                     }
                     unset($children->parent, $children->pivot);
-                    $subMenu->push($children);
+                    $childrens->push($children);
                 }
             }
             $menu = $menu->unique('id');
-            $menu->each(function ($parent) use ($subMenu) {
-                $parent->subMenu = $subMenu->where('page_id', $parent->id)->sortBy('order')->values();
+            $menu->each(function ($parent) use ($childrens) {
+                $parent->childrens = $childrens->where('page_id', $parent->id)->sortBy('order')->values();
             });
         }
         return $menu->sortBy('order')->values()->all();
