@@ -74,13 +74,14 @@ const handleLogout = () => {
             <RouterLink :to="{name : 'Home'}">
                 <Logo class="h-[3.4rem] w-auto fill-gray-800 dark:fill-gray-200" />
             </RouterLink>
+            <br>
             <ul class="space-y-2 font-medium">
                 <template v-for="page in auth.userMenu">
                     <li v-if="page.type == 'header'" class="p-3  text-gray-400 uppercase">{{ page.label }}</li>
                     <li v-else-if="page.type == 'parent' && page.childrens.length > 0">
                         <button 
                             @click="toggleActive(page.id)" 
-                            class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
+                            class="flex items-center w-full p-2 text-base cursor-pointer text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
                             :class="{'bg-gray-100 dark:bg-gray-700': page.active}">
                             <Icon :icon="page.icon" />
                             <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">

@@ -10,11 +10,11 @@ export const usePagesStore = defineStore('pages', () => {
         { title : 'label', key : 'label' },
         { title : 'route', key : 'route' },
         { title : 'icon', key : 'icon' },
-        { title : 'preview', key : 'preview' },
+        { title : 'preview', key : 'preview', exclude : true },
         { title : 'parent', key : 'parent.label' },
         { title : 'type', key : 'type' },
         { title : 'order', key : 'order' },
-        { title : '', key : 'actions' },
+        { title : '', key : 'actions', exclude : true  },
     ]
     const parents = ref([])
     const page = ref({})

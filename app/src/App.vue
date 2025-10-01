@@ -6,6 +6,8 @@
 	const global = useGlobalStore()
 	const auth = useAuthStore()
 
+	
+
 	onBeforeMount(() => {
 		auth.verifyAuth()
 	})

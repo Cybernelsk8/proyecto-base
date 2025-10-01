@@ -19,6 +19,10 @@
 
     <Modal :open="store.modal.new" header="Create new page" icon="plus">
 
+        <template #closed>
+            <Button @click="store.resetData" icon="xmark" clas="btn-light" />
+        </template>
+
         <div class="grid lg:grid-cols-2 gap-4">
             <Input v-model="store.page.label" label="Label" required />
             <Input v-model="store.page.route" label="Route" />
