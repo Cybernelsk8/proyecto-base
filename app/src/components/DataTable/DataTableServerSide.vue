@@ -1,6 +1,6 @@
 <script setup>
     import axios from 'axios'
-    import { ref, onMounted, computed } from 'vue'
+    import { ref, onMounted, computed, watchEffect } from 'vue'
     import Table from '../Table.vue'
     import { onClickOutside } from '@vueuse/core'
     import { useGlobalStore } from '@/stores/global'
@@ -23,7 +23,7 @@ import { formatVal, getNestedValue } from '@/helpers'
         multiselect : {
             type : Boolean,
             default : false
-        }
+        },
     })
 
     const emits = defineEmits(['selected'])
@@ -56,6 +56,7 @@ import { formatVal, getNestedValue } from '@/helpers'
     const fields = computed(() => {
         return props.headers.map(header => {
             if(header.exclude) return
+            if(header.key == 'actions') return
             return header.key.toUpperCase()
         })
     })
@@ -217,6 +218,7 @@ import { formatVal, getNestedValue } from '@/helpers'
 
     onMounted(() => fetch())
 
+
 </script>
 
 <template>
@@ -293,7 +295,7 @@ import { formatVal, getNestedValue } from '@/helpers'
                                 {{ sortData.direction === 'asc' ? '▲' : '▼' }}
                             </span>
                             {{ header.title }}
-                            <Icon icon="fas fa-sort" class="text-[10px]" />
+                            <Icon v-if="header.key != 'actions'" icon="fas fa-sort" class="text-[10px]" />
                         </div>
 
                     </th>

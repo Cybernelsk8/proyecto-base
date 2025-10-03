@@ -48,6 +48,14 @@ const routes = [
                             requiresAuth : true
                         } 
                     },
+                    { 
+                        path: 'menus', 
+                        name: 'Menus', 
+                        component: () => import('@/views/admin/Menus.vue'),
+                        meta : {
+                            requiresAuth : true
+                        } 
+                    },
                 ] 
             },
             

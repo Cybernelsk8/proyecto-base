@@ -11,12 +11,28 @@ class PagesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) {
+    // public function index(Request $request) {
+    //     try {
+    //         $pages = Page::with(['parent','childrens'])
+    //             ->advancedFilter($request)
+    //             ->paginate($request->per_page ?? 10);
+    //         return response($pages);
+    //     } catch (\Throwable $th) {
+    //         return response([
+    //             'error' => $th->getMessage(),
+    //             'message' => 'Message example.'
+    //         ],500);
+    //     }
+    // }
+
+    public function index() {
         try {
-            $pages = Page::with(['parent','childrens'])
-                ->advancedFilter($request)
-                ->paginate($request->per_page ?? 10);
-            return response($pages);
+            $pages = Page::with(['parent','childrens'])->get();
+        
+            return response([
+                'pages' => $pages,
+                'message' => 'Get all rows successfully.'
+            ]);
         } catch (\Throwable $th) {
             return response([
                 'error' => $th->getMessage(),
@@ -54,8 +70,8 @@ class PagesController extends Controller
             'icon' => 'nullable|string|max:255',
             'route' => 'nullable|string|max:255',
             'order' => 'nullable|integer|min:1',
-            'page_id.value' => 'required|integer|exists:pages,id',
-            'type.value' => 'required|in:header,parent,page'
+            'page_id' => 'required|integer|exists:pages,id',
+            'type' => 'required|in:header,parent,page'
 
         ]);
 
@@ -65,8 +81,8 @@ class PagesController extends Controller
                 'icon' => $request->icon ?? 'circle',
                 'route' => $request->route ?? '',
                 'order' => $request->order ?? null,
-                'page_id' => $request->page_id['value'],
-                'type' => $request->type['value'],
+                'page_id' => $request->page_id,
+                'type' => $request->type,
             ]);
 
             return response([
@@ -100,12 +116,35 @@ class PagesController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Page $page) {
+         $request->validate([
+            'label' => 'required|string|max:255',
+            'icon' => 'nullable|string|max:255',
+            'route' => 'nullable|string|max:255',
+            'order' => 'nullable|integer|min:1',
+            'page_id' => 'required|integer|exists:pages,id',
+            'type' => 'required|in:header,parent,page'
+
+        ]);
+
         try {
-            return response();
+            $page = Page::create([
+                'label' => $request->label,
+                'icon' => $request->icon ?? 'circle',
+                'route' => $request->route ?? '',
+                'order' => $request->order ?? null,
+                'page_id' => $request->page_id,
+                'type' => $request->type,
+            ]);
+
+            return response([
+                'data' => $page,
+                'message' => 'Page updated successfully.'
+            ]);
+
         } catch (\Throwable $th) {
             return response([
                 'error' => $th->getMessage(),
-                'message' => 'Message example.'
+                'message' => 'Error updated page.'
             ],500);
         }
     }
@@ -115,11 +154,14 @@ class PagesController extends Controller
      */
     public function destroy(Page $page) {
         try {
-            return response();
+            $page->delete();
+            return response([
+                'message' => 'Deleted page successfully.'
+            ]);
         } catch (\Throwable $th) {
             return response([
                 'error' => $th->getMessage(),
-                'message' => 'Message example.'
+                'message' => 'Error deleted page'
             ],500);
         }
     }

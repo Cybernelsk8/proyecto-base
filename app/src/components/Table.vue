@@ -7,7 +7,7 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <slot name="thead"></slot>
             </thead>
-            <tbody class="divide-y divide-gray-100">
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
                 <slot name="tbody"></slot>
             </tbody>
             <tfoot>

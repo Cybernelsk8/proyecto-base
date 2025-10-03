@@ -6,7 +6,7 @@ import { onClickOutside } from "@vueuse/core"
 const props = defineProps({
 	icon: { type: String, default: "" },
 	iconRight: { type: String, default: "" },
-	text: { type: String, default: "", required: true },
+	text: { type: String, default: ""},
 	img: { type: String, default: "" },
 	items: { type: Array, default: null },
 	closeOnClickOutside: { type: Boolean, default: true },
@@ -70,7 +70,7 @@ watchEffect(() => {
 		<!-- Menú -->
 		<Transition name="fade">
 			<div v-if="open" ref="floating"
-				class="z-10 bg-white dark:bg-gray-700 divide-y divide-gray-100 rounded-lg shadow-sm w-44" :style="{
+				class="z-10 bg-white dark:bg-gray-700 divide-y divide-gray-100 rounded-lg border-gray-300 border min-w-44" :style="{
 					position: strategy,
 					top: y != null ? `${y}px` : '',
 					left: x != null ? `${x}px` : ''
@@ -88,7 +88,7 @@ watchEffect(() => {
 				</template>
 
 				<template v-else>
-					<ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+					<ul class="py-2 text-sm text-gray-700 dark:text-gray-200 px-4">
 						<slot />
 					</ul>
 				</template>

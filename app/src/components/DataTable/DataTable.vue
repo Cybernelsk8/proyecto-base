@@ -1,16 +1,14 @@
 <script setup>
 import axios from 'axios'
 import { onClickOutside } from '@vueuse/core'
-import { ref, computed, onMounted, watchEffect } from 'vue'
-
-import { useGlobalStore } from '@/stores/global'
+import { ref, computed, onMounted } from 'vue'
 
 import Table from '../Table.vue'
+import LoadingBar from '../LoadingBar.vue'
+import { formatVal, getNestedValue, handleError } from '@/helpers'
 
-const global = useGlobalStore()
 
 // -------------PROPERTIES--------------
-
 
 const search = ref('')
 const startIndex = ref(1)
@@ -22,19 +20,24 @@ const sortColumn = ref(null)
 const sortDir = ref('asc')
 const sortType = ref(false)
 const loadingExportData = ref(false)
-const selectItems = ref([])
+const selectedRows = ref([])
 const selectAll = ref(null)
 const openFilterOptions = ref(false)
 const filters = ref([{ field: '', value: '', operator : '=' }])
 const target = ref(null)
 
-const emit = defineEmits(['selectdAllItems'])
+const emit = defineEmits(['selectedRows'])
 
 const props = defineProps({
-    headers: null,
-    data: null,
-    color: {
-        default: 'bg-color-1 text-color-4'
+    headers: {
+        type : Array,
+        default : () => [],
+        required : true,
+    },
+    data: {
+        type : Array,
+        default : () => [],
+        required : true,
     },
     loading: {
         type: Boolean,
@@ -42,18 +45,27 @@ const props = defineProps({
     },
     excel: {
         type: Boolean,
-        default: false
+        default: true
+    },
+    pdf: {
+        type: Boolean,
+        default: true
     },
     filterAdvance: {
         type: Boolean,
         default: true
     },
-    multiSelect: false,
+
+    multiple: {
+        type : Boolean,
+        default : true
+    },
 
     itemsSelected: {
         type: Array,
         default: () => []
     },
+
     rowsPerPage: {
         type: Number,
         default: 10
@@ -91,7 +103,7 @@ const filteredData = computed(() => {
         return filters.value.every((filter) => {
             if (filter.field && filter.value) {
                 const values = filter.value.split(';').map(value => value.trim().toLowerCase());
-                const itemValue = String(getObjectValue(item, filter.field)).toLowerCase();
+                const itemValue = String(getNestedValue(item, filter.field)).toLowerCase();
 
                 return values.some(value => {
                     if (!isNaN(itemValue) && !isNaN(value)) {
@@ -140,19 +152,12 @@ const filteredData = computed(() => {
             return true;
         }) && searchTerms.every((searchTerm) => {
             return searchables.some((column) => {
-                const value = getObjectValue(item, column);
+                const value = getNestedValue(item, column);
                 return String(value).toLowerCase().includes(searchTerm);
             });
         });
     });
 }, { cache: true })
-
-const getObjectValue  = (object, key) => {
-    const keys = key.split('.')
-    return keys.reduce((value, currentKey) => {
-        return value && value[currentKey]
-    }, object)
-}
 
 const paginatedData = computed(() => {
     startIndex.value = (currentPage.value - 1) * rowsPerPage.value
@@ -171,13 +176,13 @@ const sortedItems = computed(() => {
         return data.value.sort((a, b) => {
 
             if (sortType.value == 'numeric') {
-                const valA = Number(getObjectValue(a, sortColumn.value))
-                const valB = Number(getObjectValue(b, sortColumn.value))
+                const valA = Number(getNestedValue(a, sortColumn.value))
+                const valB = Number(getNestedValue(b, sortColumn.value))
                 return sortDir.value === 'asc' ? valA - valB : valB - valA
             }
 
-            const valA = String(getObjectValue(a, sortColumn.value))
-            const valB = String(getObjectValue(b, sortColumn.value))
+            const valA = String(getNestedValue(a, sortColumn.value))
+            const valB = String(getNestedValue(b, sortColumn.value))
             return sortDir.value === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA)
 
         });
@@ -222,20 +227,17 @@ const resetPage = () => {
 
 
 
-const selectdAll = () => {
-    emit('selectdAllItems', selectItems.value)
+const selectRow = () => {
+    emit('selectedRows', selectedRows.value)
 }
 
-const selectAllItems = () => {
+const allSelectedRows = () => {
     if (selectAll.value.checked) {
-
-        filteredData.value.forEach(item => {
-            selectItems.value.push(item)
-        })
+        selectedRows.value = paginatedData.value
     } else {
-        selectItems.value = []
+        selectedRows.value = []
     }
-    emit('selectdAllItems', selectItems.value)
+    emit('selectedRows', selectedRows.value)
 }
 
 const exportData = async () => {
@@ -267,8 +269,7 @@ const exportData = async () => {
 
 
     } catch (error) {
-        global.manejarError(error);
-
+        handleError(error);
     } finally {
 
         loadingExportData.value = false
@@ -289,7 +290,7 @@ onClickOutside(target, (event) => openFilterOptions.value = false)
 
 onMounted(() => {
     
-    selectItems.value = props.itemsSelected
+    selectedRows.value = props.itemsSelected
     if(props.rowsPerPage) {
         rowsPerPage.value = props.rowsPerPage
     }
@@ -299,64 +300,64 @@ onMounted(() => {
 </script>
 
 <template>
-    <section class="px-4 lg:px-7">
+    <section class="px-4 lg:px-7 grid gap-4">
         <!-- FILTER -->
         <div class="md:flex md:items-center md:justify-between">
-            <div class="text-color-4 bg-transparent flex items-center px-2 py-1.5">
+            <div class="inline-flex items-center px-2 py-1.5 gap-2">
                 <span>Mostrar</span>
-                <select v-model="rowsPerPage" @change="resetPage"class="text-center bg-transparent w-full focus:outline-none ring-0">
+                <select 
+                    v-model="rowsPerPage" 
+                    @change="resetPage"
+                    class="dark:bg-gray-900 cursor-pointer text-center w-full focus:outline-none ring-0">
+
                     <option>5</option>
                     <option>10</option>
                     <option>25</option>
                     <option>50</option>
                     <option>100</option>
+
                 </select>
                 <span>registros</span>
             </div>
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-2">
 
-                <Input icon="fas fa-search" class="h-10" type="search" placeholder="Buscar ..." v-model="search" />
+                <Input icon="search" type="search" placeholder="Buscar ..." v-model="search" />
 
-                <div class="flex gap-1">
+                <div class="flex gap-2">
                     <!-- FILTER ADVANCE -->
-                    <div class="relative" ref="target">
-                        <Tool-Tip message="Filtro avanzado" class="-mt-7 text-color-4" v-if="props.filterAdvance">
-                            <Icon @click="openFilterOptions = !openFilterOptions" icon="fas fa-filter" class="icon-button p-2" :class="filters.length > 0 && filters[0].value != '' ? 'bg-green-500' : 'bg-gray-400'" />
-                        </Tool-Tip>
-                        <div v-show="openFilterOptions" class="bg-white border rounded absolute mt-2 right-0 p-2 z-10">
+                    <Drop-Down icon="filter" variant="btn-primary">
+                        <div class="max-w-xs">
                             <div class="flex justify-center py-1">
                                 <button @click="addFilter"
-                                    class="text-xs flex items-center gap-1 cursor-pointer active:scale-95 ">
+                                    class="text-xs flex items-center gap-1 cursor-pointer active:scale-95 hover:font-bold ">
                                     <Icon icon="fas fa-plus" class="text-green-500 " />
-                                    Agregar otro filtro
+                                    Agregar
                                 </button>
                             </div>
                             <div v-for="(item, index) in filters" class="flex items-center gap-2 text-xs">
-                                <select class="form-control uppercase" v-model="item.field">
+                                <select class="uppercase dark:bg-gray-700 select-normal" v-model="item.field">
                                     <option v-for="head in props.headers" :value="head.key">
                                             {{ head.title }}
                                     </option>
                                 </select>
 
-                                <select class="form-control" v-model="item.operator">
+                                <select class=" dark:bg-gray-700 select-normal" v-model="item.operator">
                                     <option value="=" selected> = </option>
                                     <option value=">">{{ `>` }}</option>
                                     <option value="<">{{ `<` }}</option>
                                 </select>
 
-                                <input type="search" class="form-control" v-model="item.value">
+                                <input type="search" class="select-normal" v-model="item.value">
 
                                 <Icon v-if="index != 0" @click="removeFilter(index)" icon="fas fa-xmark" class="text-red-500 hover:scale-110 cursor-pointer" />
                             </div>
                         </div>
-                    </div>
+                    </Drop-Down>
                     <!-- END FILTER ADVANCE -->
-                    <Tool-Tip message="Excel" class="-mt-7 text-color-4">
-                        <Icon v-if="props.excel && data.length > 0" @click="exportData" :icon="loadingExportData ? 'fas fa-spinner' : 'fas fa-file-excel'" class="icon-button p-2 btn-success" :class="loadingExportData ? 'animate-spin bg-gray-300 text-gray-500' : ''" :disabled="loadingExportData" />
-                    </Tool-Tip>
-                    <Tool-Tip message="Pdf" class="-mt-7 text-color-4">
-                        <Icon v-if="props.pdf && data.length > 0" :icon="loadingExportData ? 'fas fa-spinner' : 'fas fa-file-pdf'" class="icon-button p-2 btn-danger" :class="loadingExportData ? 'animate-spin bg-gray-300 text-gray-500' : ''" :disabled="loadingExportData" />
-                    </Tool-Tip>
+                    
+                    <Button v-if="props.excel && data.length > 0" @click="exportData" icon="file-excel" class="btn-green"  :loading="loadingExportData" />
+                    <Button v-if="props.pdf && data.length > 0" icon="file-pdf" class="btn-red" :loading="loadingExportData" />
+                    
                 </div>
             </div>
         </div>
@@ -364,34 +365,57 @@ onMounted(() => {
 
         <!-- MOBILE CARDS -->
         <div class="grid gap-4 lg:hidden py-4">
-            <Card v-for="item in paginatedData" :key="item.id" class="bg-violet-50 p-2">
+            <div v-for="item in paginatedData" :key="item.id" class=" dark:bg-gray-800 p-2 rounded-xl ">
                 <table class="w-full">
-                    <tr v-for="head in props.headers" class="hover:bg-violet-200">
-                        <td class="px-4 font-semibold uppercase text-sm select-none" :width="head.width" align="left" :hidden="head.hidden">
-                            <p class="text-color-4">{{ head.title }}</p>
+                    <tr>
+                        <td v-if="props.multiple" > 
+                            <input class="checkbox" type="checkbox" @change="selectRow" v-model="selectedRows" :value="item"> 
                         </td>
-                        <td :align="head.align ?? 'center'" :width="head.width" :hidden="head.hidden">
+                    </tr>
+                    <tr v-for="head in props.headers" class="hover:bg-gray-700 rounded-lg">
+                        <td 
+                            class="px-4 font-semibold uppercase text-sm select-none" 
+                            :width="head.width" 
+                            align="left" 
+                            :hidden="head.hidden" >
+
+                            <p>{{ head.title }}</p>
+
+                        </td>
+                        <td 
+                            :align="head.align ?? 'center'" 
+                            :width="head.width" 
+                            :hidden="head.hidden">
+
                             <slot :name="head.key" :item="item">
                                 <p :class="head.class ?? 'text-sm'">
-                                    {{ global.typeValue(getObjectValue(item, head.key), head.type) }}
+                                    {{ formatVal(getNestedValue(item, head.key), head.type) }}
                                 </p>
                             </slot>
+
                         </td>
                     </tr>
                 </table>
-            </Card>
+            </div>
         </div>
 
         <!-- END MOBILE CARDS -->
 
         <!-- TABLE -->
-        <Table class="hidden lg:block">
+        <Table class="invisible lg:visible">
             <template #thead>
                 <tr>
-                    <th v-if="props.multiSelect">
-                        <!-- <input type="checkbox" ref="selectAll" @change="selectAllItems"> -->
+                    <th v-if="props.multiple">
+                        <input class="checkbox" type="checkbox" ref="selectAll" @change="allSelectedRows" title="All selected rows">
                     </th>
-                    <th v-for="(head, index) in props.headers" :key="index" @click="sort(head.key, head.type)" scope="col" class="px-4 py-3.5 text-color-4 text-xs cursor-pointer select-none" :width="head.width" :align="head.align ?? 'left'" :hidden="head.hidden">
+                    <th 
+                        v-for="(head, index) in props.headers" 
+                        :key="index" 
+                        @click="sort(head.key, head.type)" 
+                        scope="col" 
+                        :width="head.width" 
+                        :align="head.align ?? 'left'" 
+                        :hidden="head.hidden">
                         <div class="flex gap-1">
                             <span v-if="sortColumn === head.key">
                                 {{ sortDir === 'asc' ? '▲' : '▼' }}
@@ -403,14 +427,23 @@ onMounted(() => {
             </template>
             <template #tbody>
                 <slot name="tbody" :items="paginatedData">
-                    <tr v-for="item in paginatedData" :key="item.id" class="hover:bg-violet-50 text-gray-800 select-none">
-                        <td v-if="props.multiSelect" align="center"> 
-                            <input type="checkbox" @change="selectdAll" v-model="selectItems" :value="item"> 
+                    <tr v-for="item in paginatedData" 
+                        :key="item.id" 
+                        class="dark:hover:bg-gray-800 hover:bg-gray-200 select-none">
+
+                        <td v-if="props.multiple" > 
+                            <input class="checkbox" type="checkbox" @change="selectRow" v-model="selectedRows" :value="item"> 
                         </td>
-                        <td v-for="(head, index) in props.headers" class="px-4" :align="head.align ?? 'left'" :width="head.width" :key="index" :hidden="head.hidden">
+
+                        <td 
+                            v-for="(head, index) in props.headers"  
+                            :align="head.align ?? 'left'" 
+                            :width="head.width" 
+                            :key="index" 
+                            :hidden="head.hidden">
                             <slot :name="head.key" :item="item">
-                                <p :class="head.class ?? 'uppercase text-xs'">
-                                    {{ global.typeValue(getObjectValue(item, head.key), head.type) }}
+                                <p :class="head.class ?? 'uppercase text-xs dark:text-gray-300'">
+                                    {{ formatVal(getNestedValue(item, head.key), head.type) }}
                                 </p>
                             </slot>
                         </td>
@@ -418,7 +451,7 @@ onMounted(() => {
                 </slot>
                 <tr v-if="props.loading">
                     <td align="center" :colspan="props.headers.length" class="px-10">
-                        <Loading-Bar class="h-1 bg-color-4" />
+                        <LoadingBar class="h-1 bg-color-4" />
                         <span class="animate-ping">Cargando data ....</span>
                     </td>
                 </tr>
@@ -436,13 +469,11 @@ onMounted(() => {
             <!-- RESPONSIVE MOBILE BUTTONS -->
             <div v-show="filteredData.length >= rowsPerPage && displayedPages.length > 1" class="flex flex-1 justify-between md:hidden">
                 <a @click="(currentPage == 1) ? currentPage = 1 : currentPage--"
-                    class="relative flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium"
-                    :class="props.color">
+                    class="relative flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium" >
                     Anterior
                 </a>
                 <a @click="(currentPage == totalPages) ? currentPage = totalPages : currentPage++"
-                    class="relative ml-3 flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium"
-                    :class="props.color">
+                    class="relative ml-3 flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium" >
                     Siguiente
                 </a>
             </div>
@@ -480,7 +511,7 @@ onMounted(() => {
                             <Icon icon="fas fa-angle-left" class="text-xs" />
 
                         </a>
-                        <a :class="page === currentPage ? ' z-10 ' + props.color : ''"
+                        <a :class="page === currentPage ? ' z-10 ' : ''"
                             v-for="page in displayedPages" :key="page" @click="setCurrentPage(page)"
                             class="cursor-pointer select-none relative flex items-center px-3 py-1.5 text-color-4 text-sm font-semibold rounded-full hover:bg-gray-200 hover:text-color-4">
                             {{ page }}
@@ -509,10 +540,18 @@ onMounted(() => {
     @reference 'tailwindcss';
 
     td {
-        @apply py-1 text-gray-800;
+        @apply text-gray-800 dark:text-gray-300 px-6 py-4;
     }
 
     th {
-        @apply font-semibold uppercase;
+        @apply font-semibold uppercase px-6 py-3;
+    }
+
+    .select-normal {
+        @apply border border-gray-300 rounded-lg px-2 py-1 outline-none cursor-pointer;
+    }
+
+    .checkbox {
+        @apply h-4 w-4 cursor-pointer;
     }
 </style>
