@@ -16,6 +16,9 @@
         <template #preview="{item}">
             <Icon :icon="item.icon" class="text-xl text-gray-400" />
         </template>
+        <template #state="{item}">
+            <Icon :icon="item ? 'check' : 'xmark'" :class="item ? 'text-green-500' : 'text-red-500'" />
+        </template>
         <template #actions="{item}">
             <Drop-Down 
                 icon="ellipsis-vertical" 
@@ -59,6 +62,7 @@
                 label="Parents" 
                 :options="store.parents"
                 placeholder="Select parent"
+                return-type="value"
             />
             
         </div>
@@ -117,7 +121,7 @@
         <div class="grid justify-items-center">
             <Icon icon="circle-exclamation" class="text-7xl" />
             <p class="text-xl text-center">
-                Are you sure you want to delete this product?
+                Are you sure you want to delete this page?
             </p>
         </div>
         <template #footer>

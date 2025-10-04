@@ -3,26 +3,21 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { hasChanged, setToast } from '@/helpers'
 
-export const usePagesStore = defineStore('pages', () => {
+export const useMenusStore = defineStore('menus', () => {
 
     const headers = [
         { title : 'id', key : 'id', type : 'numeric' },
-        { title : 'label', key : 'label' },
-        { title : 'route', key : 'route' },
-        { title : 'icon', key : 'icon' },
-        { title : 'preview', key : 'preview'},
-        { title : 'parent', key : 'parent.label' },
-        { title : 'type', key : 'type' },
-        { title : 'order', key : 'order'},
+        { title : 'name', key : 'name' },
         { title : 'status', key : 'state' },
         { title : '', key : 'actions' },
     ]
-    const parents = ref([])
+    const menus = ref([])
     const pages = ref([])
-    const page = ref({})
-    const copy_page = ref({})
+    const selectedPages = ref([])
+    const copy_selectedPages = ref([])
+    const menu = ref({})
+    const copy_menu = ref({})
     const loading = ref({
-        parents : false,
         fetch : false,
         store : false,
         update : false,
@@ -35,19 +30,19 @@ export const usePagesStore = defineStore('pages', () => {
     })
     const errors = ref([])
 
-    const getParents = async() => {
-        loading.value.parents = true
+    const fetch = async() => {
+        loading.value.fetch = true
         try {
-            const response = await axios.get('/admin/page/get-parents')
-            parents.value = response.data
+            const response = await axios.get('/admin/menu')
+            menus.value = response.data.menus
         } catch (error) {
 
         } finally {
-            loading.value.parents = false
+            loading.value.fetch = false
         }
     }
 
-    const fetch = async() => {
+    const getPages = async() => {
         loading.value.fetch = true
         try {
             const response = await axios.get('/admin/page')
@@ -62,9 +57,12 @@ export const usePagesStore = defineStore('pages', () => {
     const store = async() => {
         loading.value.store = true
         try {
-            const response = await axios.post('/admin/page',page.value)
-            pages.value.unshift(response.data.page)
+            const response = await axios.post('/admin/menu',{
+                name : menu.value.name,
+                pages : selectedPages.value
+            })
             setToast(response.data.message,'success')
+            menus.value.unshift(response.data.menu)
             resetData()
         } catch (error) {
             if(error.response.status == 422) {
@@ -76,16 +74,21 @@ export const usePagesStore = defineStore('pages', () => {
     }
 
     const edit = (item) => {
-        page.value = item
-        copy_page.value = JSON.parse(JSON.stringify(item))
+        menu.value = item
+        copy_menu.value = JSON.parse(JSON.stringify(item))
+        selectedPages.value = menu.value.pages.map(page => page.id)
+        copy_selectedPages.value = JSON.parse(JSON.stringify(selectedPages.value))
         modal.value.edit = true
     }
 
     const update = async() => {
         loading.value.update = true
         try {
-            if(hasChanged(page.value, copy_page.value)) {
-                const response = await axios.put('/admin/page/' + page.value.id,page.value)
+            if(hasChanged(menu.value, copy_menu.value) || hasChanged(selectedPages.value, copy_selectedPages.value)) {
+                const response = await axios.put('/admin/menu/' + menu.value.id,{
+                    name : menu.value.name,
+                    pages : selectedPages.value
+                })
                 setToast(response.data.message,'success')
             }
             resetData()
@@ -99,7 +102,7 @@ export const usePagesStore = defineStore('pages', () => {
     }
 
     const deleteItem = (item) => {
-        page.value = item
+        menu.value = item
         modal.value.delete = true
     }
 
@@ -107,11 +110,12 @@ export const usePagesStore = defineStore('pages', () => {
         loading.value.destroy = true
         try {
             
-            const response = await axios.delete('/admin/page/' + page.value.id)
+            const response = await axios.delete('/admin/menu/' + menu.value.id)
             
-            const index = pages.value.findIndex(page => page.id === response.data.page.id)
+            const index = menus.value.findIndex(menu => menu.id === response.data.menu.id)
+
             if (index !== -1) {
-                pages.value.splice(index, 1)
+                menus.value.splice(index, 1)
             }
 
             setToast(response.data.message,'success')
@@ -127,27 +131,31 @@ export const usePagesStore = defineStore('pages', () => {
 
 
     const resetData = () => {
-        page.value = {}
-        copy_page.value = {}
+        menu.value = {}
+        copy_menu.value = {}
         modal.value = {
             new : false,
             edit : false,
             delete : false,
         }
+        selectedPages.value = []
+        copy_selectedPages.value = []
         errors.value = []
     }
     
     return {
         headers,
-        parents,
+        menus,
         pages,
-        page,
+        selectedPages,
+        copy_selectedPages,
+        menu,
         loading,
         modal,
         errors,
 
-        getParents,
         fetch,
+        getPages,
         store,
         edit,
         update,

@@ -11,13 +11,16 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) {
+    public function index() {
         try {
             $users = User::with(['profile','information'])
-                ->advancedFilter($request)
-                ->paginate($request->perPage ?? 10);
+                ->latest('id')
+                ->get();
 
-            return response($users);
+            return response([
+                'users' => $users,
+                'message' => 'Get all users successfully.'
+            ]);
         } catch (\Throwable $th) {
             return response([
                 'error' => $th->getMessage(),

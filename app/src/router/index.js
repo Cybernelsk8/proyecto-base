@@ -56,6 +56,14 @@ const routes = [
                             requiresAuth : true
                         } 
                     },
+                    { 
+                        path: 'roles', 
+                        name: 'Roles', 
+                        component: () => import('@/views/admin/Menus.vue'),
+                        meta : {
+                            requiresAuth : true
+                        } 
+                    },
                 ] 
             },
             

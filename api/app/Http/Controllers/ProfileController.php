@@ -12,7 +12,7 @@ class ProfileController extends Controller
     public function show(User $user) {
         try {
             return response([
-                'information' => $user->information,
+                'information' => $user->information->append('profile_name'),
                 'sessions' => $user->sessions,
                 'message' => 'Load user successfully.'
             ]);

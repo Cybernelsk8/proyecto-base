@@ -15,8 +15,7 @@ class LoginController extends Controller
     /**
      * Autentica a un usuario y emite un JWT.
      */
-    public function authenticate(Request $request)
-    {
+    public function authenticate(Request $request) {
         // Validación de datos de entrada
         $request->validate([
             'cui' => ['required','digits:13','exists:users,username'],
@@ -87,8 +86,7 @@ class LoginController extends Controller
     /**
      * Obtiene el usuario autenticado y sus datos
      */
-    public function verifyAuth(Request $request)
-    {
+    public function verifyAuth() {
         $user = Auth::user(); 
 
         if (!$user) {
@@ -103,6 +101,8 @@ class LoginController extends Controller
             'small_name',
             'url_photo',
         );
+
+        $user->makeHidden(['profile','information']);
 
         return response()->json([
             'user' => $user->toArray()

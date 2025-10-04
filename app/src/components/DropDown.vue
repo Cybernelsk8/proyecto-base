@@ -7,7 +7,7 @@ const props = defineProps({
 	icon: { type: String, default: "" },
 	iconRight: { type: String, default: "" },
 	text: { type: String, default: ""},
-	img: { type: String, default: "" },
+	img: { type: String, default: null },
 	items: { type: Array, default: null },
 	closeOnClickOutside: { type: Boolean, default: true },
 	position: {

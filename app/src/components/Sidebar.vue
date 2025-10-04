@@ -1,61 +1,36 @@
 <script setup>
 import Logo from '@/components/Logo.vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { ref, watchEffect } from 'vue'
+import { ref, watch } from 'vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const route = useRoute()
 
-const selectedOption = ref({})
+const openParentId = ref(null)
 
-    function searchSelectedOption () {
-       auth.userMenu.forEach(menu => {
-            if(menu.active && !menu.childrens.length){
-                selectedOption.value = menu
-            } else if ( menu.active && menu.childrens.length) {
-                menu.childrens.forEach(sub => {
-                    if( sub.active ) {
-                        selectedOption.value = sub
-                    }
-                })
-            }
-        })
-    }
+const toggleParent = (parentId) => {
+    openParentId.value = openParentId.value === parentId ? null : parentId
+}
 
-
-    const toggleActive = (id) => {
-       auth.userMenu.forEach(menu => {
-            if (menu.id == id) {
-                menu.active = !menu.active
-                if(!menu.childrens.length){
-                    selectedOption.value = menu
-                }
-            } else {
-                menu.active = false
-                if(menu.childrens.length) {
-                    menu.childrens.forEach(sub => {
-                        if(sub.id == id){
-                            sub.active = true
-                            selectedOption.value = sub
-                            menu.active = true
-                        }else{
-                            sub.active = false
-                        }
-                    })
-                }
-            }
-        })
-    }
-
-    watchEffect(() => {
-        searchSelectedOption()
-    })
 
 const handleLogout = () => {
     auth.logout()
     router.push({ name : 'Login'})
 }
+
+watch(() => route.name, (newRouteName) => {
+    const parent = auth.userMenu.find(menu => 
+        menu.childrens?.some(child => child.route === newRouteName)
+    )
+
+    if (parent && openParentId.value !== parent.id) {
+        openParentId.value = parent.id
+    } else if (!parent && openParentId.value !== null) {
+         openParentId.value = null 
+    }
+}, { immediate: true })
 
 </script>
 
@@ -63,11 +38,11 @@ const handleLogout = () => {
     <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar"
         type="button"
         class="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-        <span class="sr-only">Open sidebar</span>
+        <span class="sr-only">Abrir barra lateral</span>
         <Icon icon="bars" />
     </button>
 
-    <aside id="logo-sidebar"
+    <nav id="logo-sidebar"
         class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0"
         aria-label="Sidebar">
         <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
@@ -76,26 +51,27 @@ const handleLogout = () => {
             </RouterLink>
             <br>
             <ul class="space-y-2 font-medium">
-                <template v-for="page in auth.userMenu">
-                    <li v-if="page.type == 'header'" class="p-3  text-gray-400 uppercase">{{ page.label }}</li>
-                    <li v-else-if="page.type == 'parent' && page.childrens.length > 0">
+                <template v-for="page in auth.userMenu" :key="page.id">
+                    <li v-if="page.type == 'header'" class="p-3 text-gray-400 uppercase">{{ page.label }}</li>
+                    
+                    <li v-else-if="page.type == 'parent' && page.childrens?.length > 0">
                         <button 
-                            @click="toggleActive(page.id)" 
+                            @click="toggleParent(page.id)" 
                             class="flex items-center w-full p-2 text-base cursor-pointer text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                            :class="{'bg-gray-100 dark:bg-gray-700': page.active}">
+                            :class="{'bg-gray-100 dark:bg-gray-700': openParentId === page.id}"> 
                             <Icon :icon="page.icon" />
                             <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">
                                 {{ page.label }}
                             </span>
-                            <Icon icon="chevron-down" :class="page.active ? '' : 'rotate-180'" />
+                            <Icon icon="chevron-down" :class="openParentId === page.id ? '' : 'rotate-180'" />
                         </button>
-                        <ul v-if="page.active" class="py-2 space-y-2 pl-4">
-                            <li v-for="child in page.childrens">
+
+                        <ul v-if="openParentId === page.id" class="py-2 space-y-2 pl-4">
+                            <li v-for="child in page.childrens" :key="child.id">
                                 <RouterLink 
-                                    @click="toggleActive(child.id)" 
                                     :to="{ name : child.route}" 
                                     class="flex items-center w-full p-2 text-base text-gray-900 transition duration-75 rounded-lg group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
-                                    :class="{'bg-gray-100 dark:bg-gray-700': child.active}">
+                                    :class="{'bg-gray-100 dark:bg-gray-700': route.name === child.route}"> 
                                     <Icon :icon="child.icon" />
                                     <span class="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap">
                                         {{ child.label }}
@@ -104,8 +80,12 @@ const handleLogout = () => {
                             </li>
                         </ul>
                     </li>
+                    
                     <li v-else>
-                        <RouterLink :to="{ name : page.route}" class="flex cursor-pointer paginas-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" >
+                        <RouterLink 
+                            :to="{ name : page.route}" 
+                            class="flex cursor-pointer items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group" 
+                            :class="{'bg-gray-100 dark:bg-gray-700': route.name === page.route}">
                             <Icon :icon="page.icon" />
                             <span class="ms-3">{{ page.label }}</span>
                         </RouterLink>
@@ -125,8 +105,9 @@ const handleLogout = () => {
                 variant="btn-light"
             />
         </div>
-    </aside>
+    </nav>
 </template>
+
 <style scoped>
 @reference 'tailwindcss';
 

@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from "vue"
+import Avatar from "./Avatar.vue"
 
 const props = defineProps({
     text: { type: String, default: "" },
@@ -53,7 +54,7 @@ const finalClass = computed(() =>
         <!-- Normal content -->
         <span v-if="!loading" class="flex items-center gap-2">
             <!-- Imagen a la izquierda -->
-            <img v-if="img" :src="img" alt="btn-img" class="rounded-full h-6 w-6 object-cover" />
+            <Avatar v-if="img" :url="img" alt="btn-img" class="size-6"/>
 
             <!-- Icono izquierdo -->
             <Icon v-if="icon && !iconRight" :icon="icon" />

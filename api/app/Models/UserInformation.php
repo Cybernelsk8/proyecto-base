@@ -26,7 +26,6 @@ class UserInformation extends Model
         'full_name',
         'small_name',
         'url_photo',
-        'profile_name'
     ];
 
 

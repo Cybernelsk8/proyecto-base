@@ -1,43 +1,35 @@
 <script setup>
 import axios from 'axios'
-import { onClickOutside } from '@vueuse/core'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 import Table from '../Table.vue'
 import LoadingBar from '../LoadingBar.vue'
 import { formatVal, getNestedValue, handleError } from '@/helpers'
 
-
 // -------------PROPERTIES--------------
-
 const search = ref('')
-const startIndex = ref(1)
-const endIndex = ref(1)
 const currentPage = ref(1)
-const rowsPerPage = ref(10)
-const searchables = []
+const rowsPerPage = ref(10) 
 const sortColumn = ref(null)
 const sortDir = ref('asc')
 const sortType = ref(false)
 const loadingExportData = ref(false)
 const selectedRows = ref([])
 const selectAll = ref(null)
-const openFilterOptions = ref(false)
-const filters = ref([{ field: '', value: '', operator : '=' }])
-const target = ref(null)
+const filters = ref([{ field: '', value: '', operator: '=' }]) 
 
 const emit = defineEmits(['selectedRows'])
 
 const props = defineProps({
     headers: {
-        type : Array,
-        default : () => [],
-        required : true,
+        type: Array,
+        default: () => [],
+        required: true,
     },
     data: {
-        type : Array,
-        default : () => [],
-        required : true,
+        type: Array,
+        default: () => [],
+        required: true,
     },
     loading: {
         type: Boolean,
@@ -51,373 +43,391 @@ const props = defineProps({
         type: Boolean,
         default: true
     },
-    filterAdvance: {
-        type: Boolean,
-        default: true
-    },
-
     multiple: {
-        type : Boolean,
-        default : true
+        type: Boolean,
+        default: false
     },
-
     itemsSelected: {
         type: Array,
         default: () => []
     },
-
-    rowsPerPage: {
+    rowsPerPageProp: {
         type: Number,
         default: 10
     }
 })
 
-
-// -------------COMPUTATED--------------
-
-
-props.headers.map(el => {
-    searchables.push(el.key.toLowerCase().trim())
-})
-
-
-const data = computed(() => props.data)
-
-
+// -------------HELPERS--------------
 const isDate = (value) => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-    return dateRegex.test(value) && !isNaN(parseDate(value));
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+    return dateRegex.test(value) && !isNaN(parseDate(value))
 }
 
-// Función para convertir una fecha en formato DD/MM/YYYY a un objeto Date
 const parseDate = (value) => {
-    const [year, month, day] = value.split('-').map(Number);
+    const [year, month, day] = value.split('-').map(Number)
     return new Date(year, month - 1, day)
 }
 
-const filteredData = computed(() => {
-    currentPage.value = 1;
-    const searchTerms = search.value.toLowerCase().trim().split(';').map(term => term.trim());
+// -------------COMPUTED--------------
+const searchables = computed(() => 
+    props.headers.map(el => el.key.toLowerCase().trim())
+)
 
-    return sortedItems.value.filter((item) => {
-        return filters.value.every((filter) => {
-            if (filter.field && filter.value) {
-                const values = filter.value.split(';').map(value => value.trim().toLowerCase());
-                const itemValue = String(getNestedValue(item, filter.field)).toLowerCase();
+const filteredItems = computed(() => {
+    const searchTerms = search.value.toLowerCase().trim().split(';').map(term => term.trim())
 
-                return values.some(value => {
-                    if (!isNaN(itemValue) && !isNaN(value)) {
-                        // Comparación numérica
-                        const itemNumber = parseFloat(itemValue);
-                        const filterNumber = parseFloat(value);
-                        switch (filter.operator) {
-                            case '>':
-                                return itemNumber > filterNumber;
-                            case '<':
-                                return itemNumber < filterNumber;
-                            case '=':
-                                return itemNumber === filterNumber;
-                            default:
-                                return false;
-                        }
-                    } else if (isDate(itemValue) && isDate(value)) {
-                        // Comparación de fechas
-                        const itemDate = parseDate(itemValue);
-                        const filterDate = parseDate(value);
-                        switch (filter.operator) {
-                            case '>':
-                                return itemDate > filterDate;
-                            case '<':
-                                return itemDate < filterDate;
-                            case '=':
-                                return itemDate.getTime() === filterDate.getTime();
-                            default:
-                                return false;
-                        }
-                    } else {
-                        // Comparación de texto
-                        switch (filter.operator) {
-                            case '>':
-                                return itemValue > value;
-                            case '<':
-                                return itemValue < value;
-                            case '=':
-                                return itemValue.toLowerCase().includes(value);
-                            default:
-                                return false;
-                        }
-                    }
-                });
-            }
-            return true;
-        }) && searchTerms.every((searchTerm) => {
-            return searchables.some((column) => {
-                const value = getNestedValue(item, column);
-                return String(value).toLowerCase().includes(searchTerm);
-            });
-        });
-    });
-}, { cache: true })
+    return props.data.filter((item) => {
+        // Aplicar filtros avanzados
+        const passesFilters = filters.value.every((filter) => {
+            if (!filter.field || !filter.value) return true
 
-const paginatedData = computed(() => {
-    startIndex.value = (currentPage.value - 1) * rowsPerPage.value
-    endIndex.value = parseInt(startIndex.value) + parseInt(rowsPerPage.value)
-    return filteredData.value.slice(startIndex.value, endIndex.value)
-})
+            const itemValueRaw = getNestedValue(item, filter.field)
+            const filterValue = filter.value.trim()
+            const filterValueLower = filterValue.toLowerCase()
 
-const totalPages = computed(() => Math.ceil(filteredData.value.length / rowsPerPage.value))
+            // Valores para operadores especiales
+            const filterValuesArray = filterValue.split(',').map(v => v.trim()).filter(v => v !== '')
+            const betweenValues = filterValue.split('-').map(v => v.trim()).filter(v => v !== '')
 
-const setCurrentPage = (page) => {
-    currentPage.value = page
-}
+            // Determinar tipo de dato
+            const isItemNumeric = !isNaN(parseFloat(itemValueRaw)) && isFinite(itemValueRaw)
+            const isFilterNumeric = !isNaN(parseFloat(filterValue)) && isFinite(filterValue)
 
-const sortedItems = computed(() => {
-    if (sortColumn.value) {
-        return data.value.sort((a, b) => {
+            // Comparación numérica
+            if (isItemNumeric && isFilterNumeric) {
+                const itemNumber = parseFloat(itemValueRaw)
+                const filterNumber = parseFloat(filterValue)
+                const filterNumbersArray = filterValuesArray.map(Number).filter(n => !isNaN(n))
 
-            if (sortType.value == 'numeric') {
-                const valA = Number(getNestedValue(a, sortColumn.value))
-                const valB = Number(getNestedValue(b, sortColumn.value))
-                return sortDir.value === 'asc' ? valA - valB : valB - valA
+                if (filter.operator === 'between' && betweenValues.length === 2) {
+                    const [valA, valB] = betweenValues.map(Number)
+                    return itemNumber >= valA && itemNumber <= valB
+                }
+
+                switch (filter.operator) {
+                    case '=': return itemNumber === filterNumber
+                    case '!=': return itemNumber !== filterNumber
+                    case '>': return itemNumber > filterNumber
+                    case '<': return itemNumber < filterNumber
+                    case '>=': return itemNumber >= filterNumber
+                    case '<=': return itemNumber <= filterNumber
+                    case 'in': return filterNumbersArray.includes(itemNumber)
+                    case 'not in': return !filterNumbersArray.includes(itemNumber)
+                    default: return false
+                }
             }
 
-            const valA = String(getNestedValue(a, sortColumn.value))
-            const valB = String(getNestedValue(b, sortColumn.value))
-            return sortDir.value === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA)
+            // Comparación de fechas
+            if (isDate(String(itemValueRaw)) && isDate(filterValue)) {
+                const itemDate = parseDate(String(itemValueRaw))
+                const filterDate = parseDate(filterValue)
 
-        });
-    }
-    return data.value
+                if (filter.operator === 'between' && betweenValues.length === 2) {
+                    const dateA = parseDate(betweenValues[0])
+                    const dateB = parseDate(betweenValues[1])
+                    return itemDate >= dateA && itemDate <= dateB
+                }
+
+                switch (filter.operator) {
+                    case '=': return itemDate.getTime() === filterDate.getTime()
+                    case '!=': return itemDate.getTime() !== filterDate.getTime()
+                    case '>': return itemDate > filterDate
+                    case '<': return itemDate < filterDate
+                    case '>=': return itemDate >= filterDate
+                    case '<=': return itemDate <= filterDate
+                    default: return false
+                }
+            }
+
+            // Comparación de texto
+            const itemText = String(itemValueRaw).toLowerCase()
+            const filterTextArray = filterValuesArray.map(v => v.toLowerCase())
+
+            switch (filter.operator) {
+                case '=': return itemText === filterValueLower
+                case '!=': return itemText !== filterValueLower
+                case 'contains': return itemText.includes(filterValueLower)
+                case 'in': return filterTextArray.includes(itemText)
+                case 'not in': return !filterTextArray.includes(itemText)
+                default: return false
+            }
+        })
+
+        // Aplicar búsqueda de texto
+        const passesSearch = searchTerms.every((searchTerm) => {
+            return searchables.value.some((column) => {
+                const value = getNestedValue(item, column)
+                return String(value).toLowerCase().includes(searchTerm)
+            })
+        })
+
+        return passesFilters && passesSearch
+    })
 })
+
+const sortedData = computed(() => {
+    if (!sortColumn.value) return filteredItems.value
+
+    return [...filteredItems.value].sort((a, b) => {
+        const valA = getNestedValue(a, sortColumn.value)
+        const valB = getNestedValue(b, sortColumn.value)
+
+        if (sortType.value === 'numeric') {
+            const numA = Number(valA)
+            const numB = Number(valB)
+            return sortDir.value === 'asc' ? numA - numB : numB - numA
+        }
+
+        const strA = String(valA)
+        const strB = String(valB)
+        return sortDir.value === 'asc' ? strA.localeCompare(strB) : strB.localeCompare(strA)
+    })
+})
+
+const totalPages = computed(() => 
+    Math.ceil(sortedData.value.length / rowsPerPage.value)
+)
+
+const startIndex = computed(() => 
+    (currentPage.value - 1) * rowsPerPage.value
+)
+
+const endIndex = computed(() => 
+    Math.min(startIndex.value + rowsPerPage.value, sortedData.value.length)
+)
+
+const paginatedData = computed(() => 
+    sortedData.value.slice(startIndex.value, endIndex.value)
+)
 
 const displayedPages = computed(() => {
+    const totalDisplayed = 6
+    const half = Math.floor(totalDisplayed / 2)
+    let start = Math.max(currentPage.value - half, 1)
+    let end = Math.min(start + totalDisplayed - 1, totalPages.value)
 
-    const totalDisplayedPages = 6
-    const halfDisplayedPages = Math.floor(totalDisplayedPages / 2)
-    let startPage = Math.max(currentPage.value - halfDisplayedPages, 1)
-    let endPage = Math.min(startPage + totalDisplayedPages - 1, totalPages.value)
-
-    if (endPage - startPage + 1 < totalDisplayedPages) {
-        startPage = Math.max(endPage - totalDisplayedPages + 1, 1)
+    if (end - start + 1 < totalDisplayed) {
+        start = Math.max(end - totalDisplayed + 1, 1)
     }
 
-    return Array(endPage - startPage + 1).fill().map((_, index) => startPage + index)
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i)
 })
 
+// -------------WATCHERS--------------
+watch([search, filters], () => {
+    currentPage.value = 1
+}, { deep: true })
+
+watch(selectedRows, () => {
+    emit('selectedRows', selectedRows.value)
+}, { deep: true })
 
 // -------------METHODS--------------
-
+const setCurrentPage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page
+    }
+}
 
 const sort = (column, type) => {
-
     sortType.value = type
-
     if (sortColumn.value === column) {
-        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc'
     } else {
-        sortColumn.value = column;
-        sortDir.value = 'asc';
+        sortColumn.value = column
+        sortDir.value = 'asc'
     }
-
 }
 
 const resetPage = () => {
     currentPage.value = 1
 }
 
-
-
-const selectRow = () => {
-    emit('selectedRows', selectedRows.value)
-}
-
 const allSelectedRows = () => {
-    if (selectAll.value.checked) {
-        selectedRows.value = paginatedData.value
+    if (selectAll.value?.checked) {
+        // Agregar solo los items que no están ya seleccionados
+        const newItems = paginatedData.value.filter(
+            item => !selectedRows.value.includes(item)
+        )
+        selectedRows.value.push(...newItems)
     } else {
-        selectedRows.value = []
+        // Remover solo los items de la página actual
+        selectedRows.value = selectedRows.value.filter(
+            item => !paginatedData.value.includes(item)
+        )
     }
-    emit('selectedRows', selectedRows.value)
 }
 
 const exportData = async () => {
+    if (sortedData.value.length === 0) return
 
     loadingExportData.value = true
-
     try {
+        const response = await axios.post('exportar-excel', {
+            columns: props.headers,
+            data: sortedData.value
+        }, {
+            responseType: 'blob'
+        })
 
-        const response = await axios.post('exportar-excel',
-            {
-                columns: props.headers,
-                data: filteredData.value
-            },
-            {
-                responseType: 'blob'
-            })
-
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-
+        const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
         link.href = url
-        link.setAttribute('download', 'export.xlsx')
-
+        link.setAttribute('download', `export_${Date.now()}.xlsx`)
         document.body.appendChild(link)
-        link.click();
-
+        link.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(link)
-
-
     } catch (error) {
-        handleError(error);
+        console.error(error)
     } finally {
-
         loadingExportData.value = false
     }
 }
 
 const addFilter = () => {
-    filters.value.push({ field: '', value: '', operator : '=' })
+    filters.value.push({ field: '', value: '', operator: '=' })
 }
 
 const removeFilter = (index) => {
-    if (index != 0) {
-        delete (filters.value.splice(index, 1))
+    if (index > 0) {
+        filters.value.splice(index, 1)
     }
 }
 
-onClickOutside(target, (event) => openFilterOptions.value = false)
-
 onMounted(() => {
-    
-    selectedRows.value = props.itemsSelected
-    if(props.rowsPerPage) {
-        rowsPerPage.value = props.rowsPerPage
-    }
-
-});
-
+    selectedRows.value = [...props.itemsSelected]
+    rowsPerPage.value = props.rowsPerPageProp
+})
 </script>
 
 <template>
     <section class="px-4 lg:px-7 grid gap-4">
-        <!-- FILTER -->
         <div class="md:flex md:items-center md:justify-between">
             <div class="inline-flex items-center px-2 py-1.5 gap-2">
                 <span>Mostrar</span>
                 <select 
-                    v-model="rowsPerPage" 
+                    v-model.number="rowsPerPage" 
                     @change="resetPage"
                     class="dark:bg-gray-900 cursor-pointer text-center w-full focus:outline-none ring-0">
-
-                    <option>5</option>
-                    <option>10</option>
-                    <option>25</option>
-                    <option>50</option>
-                    <option>100</option>
-
+                    <option :value="5">5</option>
+                    <option :value="10">10</option>
+                    <option :value="25">25</option>
+                    <option :value="50">50</option>
+                    <option :value="100">100</option>
+                    <option :value="500">500</option>
                 </select>
                 <span>registros</span>
             </div>
+            
             <div class="flex items-center gap-2">
-
                 <Input icon="search" type="search" placeholder="Buscar ..." v-model="search" />
 
                 <div class="flex gap-2">
-                    <!-- FILTER ADVANCE -->
                     <Drop-Down icon="filter" variant="btn-primary">
                         <div class="max-w-xs">
                             <div class="flex justify-center py-1">
                                 <button @click="addFilter"
-                                    class="text-xs flex items-center gap-1 cursor-pointer active:scale-95 hover:font-bold ">
-                                    <Icon icon="fas fa-plus" class="text-green-500 " />
+                                    class="text-xs flex items-center gap-1 cursor-pointer active:scale-95 hover:font-bold">
+                                    <Icon icon="plus" class="text-green-500" />
                                     Agregar
                                 </button>
                             </div>
-                            <div v-for="(item, index) in filters" class="flex items-center gap-2 text-xs">
+                            <div v-for="(item, index) in filters" :key="index" class="flex items-center gap-2 text-xs mb-2">
                                 <select class="uppercase dark:bg-gray-700 select-normal" v-model="item.field">
-                                    <option v-for="head in props.headers" :value="head.key">
-                                            {{ head.title }}
+                                    <option value="">Campo</option>
+                                    <option v-for="head in props.headers" :key="head.key" :value="head.key">
+                                        {{ head.title }}
                                     </option>
                                 </select>
 
-                                <select class=" dark:bg-gray-700 select-normal" v-model="item.operator">
-                                    <option value="=" selected> = </option>
-                                    <option value=">">{{ `>` }}</option>
-                                    <option value="<">{{ `<` }}</option>
+                                <select class="dark:bg-gray-700 select-normal" v-model="item.operator">
+                                    <option value="=" selected>=</option>
+                                    <option value="!=">!=</option>
+                                    <option value=">">></option>
+                                    <option value="<"><</option>
+                                    <option value=">=">>=</option>
+                                    <option value="<="><=</option>
+                                    <option value="in">In</option>
+                                    <option value="not in">Not in</option>
+                                    <option value="contains">Like</option>
+                                    <option value="between">Between</option>
                                 </select>
 
-                                <input type="search" class="select-normal" v-model="item.value">
+                                <input type="search" class="select-normal w-30" v-model="item.value" placeholder="Valor">
 
-                                <Icon v-if="index != 0" @click="removeFilter(index)" icon="fas fa-xmark" class="text-red-500 hover:scale-110 cursor-pointer" />
+                                <Icon v-if="index !== 0" @click="removeFilter(index)" 
+                                    icon="xmark" 
+                                    class="text-red-500 hover:scale-110 cursor-pointer" />
                             </div>
+                            <p class="text-[10px] text-gray-400 mt-2">
+                                * <strong>Between</strong> usa guion (-). Ej: 10-20<br>
+                                * <strong>In/Not in</strong> usa coma (,). Ej: valor1,valor2,valor3
+                            </p>
                         </div>
                     </Drop-Down>
-                    <!-- END FILTER ADVANCE -->
-                    
-                    <Button v-if="props.excel && data.length > 0" @click="exportData" icon="file-excel" class="btn-green"  :loading="loadingExportData" />
-                    <Button v-if="props.pdf && data.length > 0" icon="file-pdf" class="btn-red" :loading="loadingExportData" />
-                    
+                    <Button v-if="props.excel && sortedData.length > 0" 
+                        @click="exportData" 
+                        icon="file-excel" 
+                        class="btn-green" 
+                        :loading="loadingExportData" />
+                    <Button v-if="props.pdf && sortedData.length > 0" 
+                        icon="file-pdf" 
+                        class="btn-red" 
+                        :loading="loadingExportData" />
                 </div>
             </div>
         </div>
-        <!-- END FILTER -->
 
-        <!-- MOBILE CARDS -->
+        <!-- Vista móvil -->
         <div class="grid gap-4 lg:hidden py-4">
-            <div v-for="item in paginatedData" :key="item.id" class=" dark:bg-gray-800 p-2 rounded-xl ">
+            <div v-for="item in paginatedData" :key="item.id" class="dark:bg-gray-800 p-2 rounded-xl">
                 <table class="w-full">
-                    <tr>
-                        <td v-if="props.multiple" > 
-                            <input class="checkbox" type="checkbox" @change="selectRow" v-model="selectedRows" :value="item"> 
+                    <tr v-if="props.multiple">
+                        <td colspan="2">
+                            <input class="checkbox" type="checkbox" v-model="selectedRows" :value="item">
                         </td>
                     </tr>
-                    <tr v-for="head in props.headers" class="hover:bg-gray-700 rounded-lg">
-                        <td 
-                            class="px-4 font-semibold uppercase text-sm select-none" 
+                    <tr v-for="head in props.headers" :key="head.key" class="hover:bg-gray-700 rounded-lg">
+                        <td class="px-4 font-semibold uppercase text-sm select-none" 
                             :width="head.width" 
                             align="left" 
-                            :hidden="head.hidden" >
-
-                            <p>{{ head.title }}</p>
-
+                            :hidden="head.hidden">
+                            {{ head.title }}
                         </td>
-                        <td 
-                            :align="head.align ?? 'center'" 
+                        <td :align="head.align ?? 'center'" 
                             :width="head.width" 
                             :hidden="head.hidden">
-
                             <slot :name="head.key" :item="item">
                                 <p :class="head.class ?? 'text-sm'">
                                     {{ formatVal(getNestedValue(item, head.key), head.type) }}
                                 </p>
                             </slot>
-
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
 
-        <!-- END MOBILE CARDS -->
-
-        <!-- TABLE -->
+        <!-- Vista desktop -->
         <Table class="invisible lg:visible">
             <template #thead>
                 <tr>
                     <th v-if="props.multiple">
-                        <input class="checkbox" type="checkbox" ref="selectAll" @change="allSelectedRows" title="All selected rows">
+                        <input class="checkbox" type="checkbox" ref="selectAll" 
+                            @change="allSelectedRows" 
+                            title="Seleccionar todos">
                     </th>
-                    <th 
-                        v-for="(head, index) in props.headers" 
-                        :key="index" 
+                    <th v-for="head in props.headers" 
+                        :key="head.key" 
                         @click="sort(head.key, head.type)" 
                         scope="col" 
                         :width="head.width" 
                         :align="head.align ?? 'left'" 
-                        :hidden="head.hidden">
-                        <div class="flex gap-1">
-                            <span v-if="sortColumn === head.key">
+                        :hidden="head.hidden"
+                        class="cursor-pointer select-none">
+                        <div class="flex gap-1 items-center">
+                            <span v-if="sortColumn === head.key" class="text-xs">
                                 {{ sortDir === 'asc' ? '▲' : '▼' }}
                             </span>
                             {{ head.title }}
@@ -429,53 +439,53 @@ onMounted(() => {
                 <slot name="tbody" :items="paginatedData">
                     <tr v-for="item in paginatedData" 
                         :key="item.id" 
-                        class="dark:hover:bg-gray-800 hover:bg-gray-200 select-none">
-
-                        <td v-if="props.multiple" > 
-                            <input class="checkbox" type="checkbox" @change="selectRow" v-model="selectedRows" :value="item"> 
+                        class="dark:hover:bg-gray-800 hover:bg-gray-200">
+                        <td v-if="props.multiple">
+                            <input class="checkbox" type="checkbox" v-model="selectedRows" :value="item">
                         </td>
-
-                        <td 
-                            v-for="(head, index) in props.headers"  
+                        <td v-for="head in props.headers" 
+                            :key="head.key" 
                             :align="head.align ?? 'left'" 
                             :width="head.width" 
-                            :key="index" 
                             :hidden="head.hidden">
                             <slot :name="head.key" :item="item">
-                                <p :class="head.class ?? 'uppercase text-xs dark:text-gray-300'">
-                                    {{ formatVal(getNestedValue(item, head.key), head.type) }}
-                                </p>
+                                <div :class="`uppercase text-xs dark:text-gray-300 ${head.class}`">
+                                    <Icon v-if="head.icon" :icon="head.icon" />
+                                    <span>{{ formatVal(getNestedValue(item, head.key), head.type) }} </span>
+                                    <span>{{ head.text ?? '' }}</span>
+                                </div>
                             </slot>
                         </td>
                     </tr>
                 </slot>
                 <tr v-if="props.loading">
-                    <td align="center" :colspan="props.headers.length" class="px-10">
+                    <td align="center" :colspan="props.headers.length + (props.multiple ? 1 : 0)" class="px-10">
                         <LoadingBar class="h-1 bg-color-4" />
-                        <span class="animate-ping">Cargando data ....</span>
+                        <span class="animate-ping">Cargando data...</span>
                     </td>
                 </tr>
-                <tr v-if="data.length === 0 && props.loading === false">
-                    <td align="center" :colspan="props.headers.length">
-                        No hay data ....
+                <tr v-if="sortedData.length === 0 && !props.loading">
+                    <td align="center" :colspan="props.headers.length + (props.multiple ? 1 : 0)">
+                        No hay datos disponibles
                     </td>
                 </tr>
             </template>
         </Table>
-        <!-- END TABLE -->
 
-        <!-- PAGINATION -->
+        <!-- Paginación -->
         <div class="flex items-center justify-between pb-4">
-            <!-- RESPONSIVE MOBILE BUTTONS -->
-            <div v-show="filteredData.length >= rowsPerPage && displayedPages.length > 1" class="flex flex-1 justify-between md:hidden">
-                <a @click="(currentPage == 1) ? currentPage = 1 : currentPage--"
-                    class="relative flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium" >
+            <div v-show="sortedData.length >= rowsPerPage && displayedPages.length > 1" 
+                class="flex flex-1 justify-between md:hidden">
+                <button @click="setCurrentPage(currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="relative flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium disabled:opacity-50">
                     Anterior
-                </a>
-                <a @click="(currentPage == totalPages) ? currentPage = totalPages : currentPage++"
-                    class="relative ml-3 flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium" >
+                </button>
+                <button @click="setCurrentPage(currentPage + 1)"
+                    :disabled="currentPage === totalPages"
+                    class="relative ml-3 flex items-center rounded border border-gray-300 select-none cursor-pointer btn px-4 py-2 text-sm font-medium disabled:opacity-50">
                     Siguiente
-                </a>
+                </button>
             </div>
 
             <div class="hidden md:flex md:flex-1 sm:items-center sm:justify-between">
@@ -484,55 +494,53 @@ onMounted(() => {
                         Mostrando
                         <span class="font-medium">{{ startIndex + 1 }}</span>
                         a
-                        <span class="font-medium">{{ (endIndex >= filteredData.length) ? filteredData.length : endIndex
-                            }}</span>
+                        <span class="font-medium">{{ endIndex }}</span>
                         de
-                        <span class="font-medium">{{ filteredData.length }}</span>
+                        <span class="font-medium">{{ sortedData.length }}</span>
                         resultados
                     </p>
                 </div>
-                <div v-if="itemsSelected.length > 0">
+                <div v-if="props.itemsSelected.length > 0">
                     <p class="text-xs text-color-4">
                         Seleccionados
-                        <span class="font-medium">{{ itemsSelected.length }}</span>
+                        <span class="font-medium">{{ props.itemsSelected.length }}</span>
                         de
-                        <span class="font-medium">{{ filteredData.length }}</span>
+                        <span class="font-medium">{{ sortedData.length }}</span>
                     </p>
                 </div>
-                <div v-show="filteredData.length >= rowsPerPage && displayedPages.length > 1">
+                <div v-show="sortedData.length >= rowsPerPage && displayedPages.length > 1">
                     <nav class="flex gap-x-2">
-                        <a v-if="currentPage > 4" @click="setCurrentPage(1)"
+                        <button v-if="currentPage > 4" 
+                            @click="setCurrentPage(1)"
                             class="cursor-pointer relative flex items-center px-3 py-1.5 font-semibold text-color-4 rounded-full hover:bg-gray-200">
-                            <Icon icon="fas fa-angles-left" class="text-xs" />
-                        </a>
-                        <a v-if="currentPage > 1" @click="(currentPage == 1) ? currentPage = 1 : currentPage--"
+                            <Icon icon="angles-left" class="text-xs" />
+                        </button>
+                        <button v-if="currentPage > 1" 
+                            @click="setCurrentPage(currentPage - 1)"
                             class="cursor-pointer relative flex items-center px-3 py-1.5 text-sm font-semibold text-color-4 rounded-full hover:bg-gray-200">
-                            <span class="sr-only">Previous</span>
-                            <Icon icon="fas fa-angle-left" class="text-xs" />
-
-                        </a>
-                        <a :class="page === currentPage ? ' z-10 ' : ''"
-                            v-for="page in displayedPages" :key="page" @click="setCurrentPage(page)"
-                            class="cursor-pointer select-none relative flex items-center px-3 py-1.5 text-color-4 text-sm font-semibold rounded-full hover:bg-gray-200 hover:text-color-4">
+                            <Icon icon="angle-left" class="text-xs" />
+                        </button>
+                        <button v-for="page in displayedPages" 
+                            :key="page" 
+                            @click="setCurrentPage(page)"
+                            :class="page === currentPage ? 'bg-gray-200 dark:bg-gray-700' : ''"
+                            class="cursor-pointer select-none relative flex items-center px-3 py-1.5 text-color-4 text-sm font-semibold rounded-full hover:bg-gray-200">
                             {{ page }}
-                        </a>
-                        <a v-if="currentPage < (totalPages - 1)"
-                            @click="(currentPage == totalPages) ? currentPage = totalPages : currentPage++"
-                            class="cursor-pointer relative flex items-center px-3 py-1.5 text-sm font-semibold text-color-4 rounded-full hover:bg-gray-200"
-                            >
-                            <span class="sr-only">Next</span>
-                            <Icon icon="fas fa-angle-right" class="text-xs" />
-                        </a>
-                        <a v-if="currentPage < (totalPages - 2)" @click="setCurrentPage(totalPages)"
+                        </button>
+                        <button v-if="currentPage < totalPages" 
+                            @click="setCurrentPage(currentPage + 1)"
+                            class="cursor-pointer relative flex items-center px-3 py-1.5 text-sm font-semibold text-color-4 rounded-full hover:bg-gray-200">
+                            <Icon icon="angle-right" class="text-xs" />
+                        </button>
+                        <button v-if="currentPage < totalPages - 2" 
+                            @click="setCurrentPage(totalPages)"
                             class="cursor-pointer relative flex items-center px-3 py-1.5 font-semibold text-color-4 rounded-full hover:bg-gray-200">
-                            <Icon icon="fas fa-angles-right" class="text-xs" />
-                        </a>
+                            <Icon icon="angles-right" class="text-xs" />
+                        </button>
                     </nav>
                 </div>
             </div>
         </div>
-        <!-- END PAGINATION -->
-
     </section>
 </template>
 
@@ -548,10 +556,10 @@ onMounted(() => {
     }
 
     .select-normal {
-        @apply border border-gray-300 rounded-lg px-2 py-1 outline-none cursor-pointer;
+        @apply border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 outline-none cursor-pointer;
     }
 
     .checkbox {
-        @apply h-4 w-4 cursor-pointer;
+        @apply h-4 w-4 cursor-pointer accent-blue-600;
     }
 </style>

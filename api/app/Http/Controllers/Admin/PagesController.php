@@ -11,23 +11,10 @@ class PagesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    // public function index(Request $request) {
-    //     try {
-    //         $pages = Page::with(['parent','childrens'])
-    //             ->advancedFilter($request)
-    //             ->paginate($request->per_page ?? 10);
-    //         return response($pages);
-    //     } catch (\Throwable $th) {
-    //         return response([
-    //             'error' => $th->getMessage(),
-    //             'message' => 'Message example.'
-    //         ],500);
-    //     }
-    // }
-
+    
     public function index() {
         try {
-            $pages = Page::with(['parent','childrens'])->get();
+            $pages = Page::with(['parent','childrens'])->latest('id')->get();
         
             return response([
                 'pages' => $pages,
@@ -86,7 +73,7 @@ class PagesController extends Controller
             ]);
 
             return response([
-                'data' => $page,
+                'page' => $page,
                 'message' => 'Created page successfully.'
             ]);
 
@@ -127,17 +114,17 @@ class PagesController extends Controller
         ]);
 
         try {
-            $page = Page::create([
-                'label' => $request->label,
-                'icon' => $request->icon ?? 'circle',
-                'route' => $request->route ?? '',
-                'order' => $request->order ?? null,
-                'page_id' => $request->page_id,
-                'type' => $request->type,
-            ]);
+
+            $page->label = $request->label;
+            $page->icon = $request->icon ?? 'circle';
+            $page->route = $request->route ?? '';
+            $page->order = $request->order ?? null;
+            $page->page_id = $request->page_id;
+            $page->type = $request->type;
+            $page->save();
 
             return response([
-                'data' => $page,
+                'page' => $page,
                 'message' => 'Page updated successfully.'
             ]);
 
@@ -156,6 +143,7 @@ class PagesController extends Controller
         try {
             $page->delete();
             return response([
+                'page' => $page,
                 'message' => 'Deleted page successfully.'
             ]);
         } catch (\Throwable $th) {
