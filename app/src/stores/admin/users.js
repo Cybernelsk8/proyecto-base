@@ -2,11 +2,13 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 import { hasChanged, setToast } from '@/helpers'
+import { useAuthStore } from '../auth'
 
 export const useUsersStore = defineStore('users', () => {
 
+
+    const auth = useAuthStore()
     const headers = [
-        { title : 'id', key : 'id', type : 'numeric' },
         { title : 'user', key : 'information.full_name' },
         { title : 'birthday', key : 'information.birthday', icon : 'cake' },
         { title : 'profile', key : 'profile.name', icon : 'tag' },
@@ -14,20 +16,31 @@ export const useUsersStore = defineStore('users', () => {
         { title : 'state', key : 'deleted_at' },
     ]
     const users = ref([])
-    const user = ref({})
+    const user = ref({
+        information : {},
+        profile : {}
+    })
     const copy_user = ref({})
+    const picture = ref(null)
+    const change = ref(false)
     const loading = ref({
         fetch : false,
         store : false,
         update : false,
-        destroy : false,
+        reset : false,
+        disabled : false,
+        upload : false,
+        delete : false,
     })
     const modal = ref({
         new : false,
-        edit: false,
-        delete : false,
     })
-    const errors = ref([])
+    const errors = ref({
+        info : [],
+        pass : [],
+        upload : [],
+        delete : [],
+    })
 
     const fetch = async() => {
         loading.value.fetch = true
@@ -41,62 +54,59 @@ export const useUsersStore = defineStore('users', () => {
         }
     }
 
+     const show = async (id) => {
+        loading.value.fetch = true
+        try {
+            const response = await axios.get('/admin/user/' + id)
+            user.value = response.data.user
+            user.value.profile = response.data.user.profile ?? {}
+            copy_user.value = JSON.parse(JSON.stringify(response.data.user))
+        } catch (error) {
+
+        } finally {
+            loading.value.fetch = false
+        }
+    }
+
     const store = async() => {
         loading.value.store = true
         try {
-            const response = await axios.post('/admin/user',user.value)
-            setToast(response.data.message,'success')
+            const response = await axios.post('/admin/user',user.value.information)
             users.value.unshift(response.data.user)
+            setToast(response.data.message,'success')
             resetData()
         } catch (error) {
             if(error.response.status == 422) {
-                errors.value = error.response.data.errors
+                errors.value.info = error.response.data.errors
             }
         } finally {
             loading.value.store = false
         }
     }
 
-    const edit = (item) => {
-        user.value = item
-        copy_user.value = JSON.parse(JSON.stringify(item))
-        modal.value.edit = true
-    }
-
-    const update = async() => {
+    const update = async () => {
         loading.value.update = true
         try {
-            if(hasChanged(user.value, copy_user.value)) {
-                const response = await axios.put('/admin/user/' + user.value.id, user.value)
-                setToast(response.data.message,'success')
-            }
-            resetData()
+            if(!hasChanged(user.value,copy_user.value,)) return
+
+            const response = await axios.put('admin/user/' + auth.user.id , user.value.information)
+            auth.verifyAuth
+            setToast(response.data.message,'success')
+
         } catch (error) {
             if(error.response.status == 422) {
-                errors.value = error.response.data.errors
+                errors.value.update = error.response.data.errors
             }
-        } finally {
+            console.error(error)
+        }finally {
             loading.value.update = false
         }
     }
 
-    const deleteItem = (item) => {
-        user.value = item
-        modal.value.delete = true
-    }
-
-    const destroy = async() => {
-        loading.value.destroy = true
-        try {
-            
-            const response = await axios.delete('/admin/user/' + user.value.id)
-            
-            const index = users.value.findIndex(user => user.id === response.data.user.id)
-
-            if (index !== -1) {
-                users.value.splice(index, 1)
-            }
-
+    const disabledUser = async() => {
+        loading.value.disabled = true
+        try { 
+            const response = await axios.delete('/admin/user/disabled/' + user.value.id)
             setToast(response.data.message,'success')
             resetData()
         } catch (error) {
@@ -104,36 +114,108 @@ export const useUsersStore = defineStore('users', () => {
                 errors.value = error.response.data.errors
             }
         } finally {
-            loading.value.destroy = false
+            loading.value.disabled = false
         }
     }
 
+    const resetPassword = async () => {
+        loading.value.reset = true
+        try {
+            const response = await axios.put('/admin/user/reset-password/' + user.value.id)
+            setToast(response.data.message,'success')
+            resetData()
+        } catch (error) {
+            if(error.response.status == 422) {
+                errors.value = error.response.data.errors
+            }
+        } finally {
+            loading.value.reset = false
+        }
+    }
+
+    const getFile = (file) => {
+        picture.value = file
+    }
+
+    const uploadPicture = async () => {
+        loading.value.upload = true
+        try {
+
+            const formData = new FormData()
+            formData.append('file',picture.value)
+
+            const response = await axios.post('profile/upload-picture/' + auth.user.id ,formData, {
+                headers : {
+                    'Content-Type' : 'multipart/form-data',
+                }
+            })
+            auth.user.url_photo = response.data.url_photo
+            information.value.url_photo = response.data.url_photo
+            setToast(response.data.message,'primary')
+            resetData()
+        } catch (error) {
+            if(error.response.status == 422) {
+                errors.value.upload = error.response.errors
+            }
+        } finally {
+            loading.value.upload = false
+        }
+    }
+
+    const deletePicture = async () => {
+        loading.value.delete = true
+        try {
+            const response = await axios.delete('profile/delete-picture/' + auth.user.id )
+            setToast(response.data.message,'success')
+            auth.user.url_photo = null
+            user.value.information.url_photo = null
+            resetData()
+        } catch (error) {
+            if(error.response.status == 422) {
+                errors.value.delete = error.response.errors
+            }
+        } finally {
+            loading.value.delete = false
+        }
+    }
 
     const resetData = () => {
-        user.value = {}
+        user.value = {
+            information : {},
+            profile : {}
+        }
         copy_user.value = {}
         modal.value = {
             new : false,
-            edit : false,
-            delete : false,
         }
-        errors.value = []
+        errors.value = {
+            info : [],
+            pass : [],
+            upload : [],
+            delete : [],
+        },
+        
+        picture.value = null
     }
     
     return {
         headers,
         users,
         user,
+        change,
         loading,
         modal,
         errors,
 
         fetch,
+        show,
         store,
-        edit,
         update,
-        deleteItem,
-        destroy,
+        disabledUser,
+        resetPassword,
+        getFile,
+        uploadPicture,
+        deletePicture,
         resetData,
     }
 })

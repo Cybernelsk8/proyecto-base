@@ -20,6 +20,7 @@ import Modal from './components/Modal.vue'
 import Select from './components/Select.vue'
 import DataTableServerSide from './components/DataTable/DataTableServerSide.vue'
 import DataTable from './components/DataTable/DataTable.vue'
+import Toggle from './components/Toggle.vue'
 
 const app = createApp(App)
 
@@ -32,6 +33,7 @@ app.component('Icon',FontAwesomeIcon)
 .component('Input',Input)
 .component('Select', Select)
 .component('Drop-Down',DropDown)
+.component('Toggle',Toggle)
 .component('Modal',Modal)
 .component('DataTable-ServerSide',DataTableServerSide)
 .component('Data-Table',DataTable)

@@ -38,7 +38,16 @@ const routes = [
                         component: () => import('@/views/admin/Users.vue'),
                         meta : {
                             requiresAuth : true
-                        } 
+                        }
+                    },
+                    { 
+                        path: 'users/edit/:id', 
+                        name: 'User edit', 
+                        component: () => import('@/views/admin/UserEdit.vue'),
+                        props : true,
+                        meta : {
+                            requiresAuth : true
+                        }
                     },
                     { 
                         path: 'pages', 

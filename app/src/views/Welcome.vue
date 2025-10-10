@@ -1,4 +1,5 @@
 <script setup>
+import Toggle from '@/components/Toggle.vue';
 import { ref } from 'vue';
 
     const myOptions = [
@@ -31,6 +32,7 @@ import { ref } from 'vue';
     // Estados de v-model
     const selectedUser = ref(null); // Simple: contendrá { label: '...', value: 101, ... }
     const selectedRoles = ref([]);
+    const gender = ref('');
 </script>
 <template>
     <div class="grid grid-cols-5 justify-items-center gap-3">
@@ -53,6 +55,7 @@ import { ref } from 'vue';
     <div>
         <Select 
             v-model="selectedUser" 
+            icon="user"
             :options="myOptions" 
             placeholder="Selecciona un Rol" 
             :loading="false" 
@@ -61,5 +64,9 @@ import { ref } from 'vue';
         />
 
         {{ selectedUser }}
+    </div>
+    <br>
+    <div>
+        <Toggle v-model="gender" :values="['F','M']" class="w-18" />
     </div>
 </template>

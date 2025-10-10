@@ -4,11 +4,12 @@ import { computed } from 'vue'
 const props = defineProps({
     modelValue: {
         type: [String, Number, Boolean],
-        required: true
+        default : false,
     },
     values: {
         type: Array,
         default: () => [false, true],
+        require : true,
         validator: (value) => value.length === 2
     },
     error: {
@@ -55,7 +56,7 @@ const toggleChecked = () => {
         <div class="absolute top-1/2 aspect-square h-[70%] -translate-y-1/2 bg-white rounded-full transition-all duration-500"
             :class="{
                 'right-[6%]': isActive,
-                'right-[57%]': isValidValue && !isActive,
+                'right-[60%]': isValidValue && !isActive,
                 'right-[31.5%]': isNeutral,
                 'bg-gray-200': isNeutral
             }">

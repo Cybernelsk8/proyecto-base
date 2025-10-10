@@ -54,6 +54,10 @@ const props = defineProps({
     searching : {
         type : Boolean,
         default : true
+    },
+    icon : {
+        type : String,
+        default : null,
     }
 })
 
@@ -326,30 +330,33 @@ watch(filteredOptions, () => {
                 type="button" 
                 :disabled="isDisabled" 
                 :class="[
-                    'flex w-full items-center justify-between px-4 py-2 input transition-all',
+                    'flex w-full items-center justify-between p-2 input transition-all',
                     'hover:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
                     isDisabled ? 'cursor-not-allowed bg-gray-100 opacity-70' : 'cursor-pointer',
                     { 'border-blue-500 ring-1 ring-blue-500': isOpen },
                 ]" 
                 @click="toggleDropdown" >
-                <span v-if="!hasSelection">
-                    {{ placeholder }}
-                </span>
-
-                <div v-else class="flex flex-wrap items-center gap-2">
-                    <template v-if="isMultiple">
-                        <span v-for="item in currentSelection" :key="props.returnType === 'value' ? item : item.value"
-                            class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                            {{ getDisplayLabel(item) }}
-                            <button type="button" class="ml-1 text-blue-700 hover:text-blue-900"
-                                @click.stop="removeOption(props.returnType === 'value' ? { value: item } : item)">
-                                &times;
-                            </button>
-                        </span>
-                    </template>
-                    <template v-else>
-                        <span>{{ getDisplayLabel(currentSelection) }}</span>
-                    </template>
+                <div class="flex items-center gap-2">
+                    <Icon :icon="props.icon" class="text-lg" />
+                    <span v-if="!hasSelection">
+                        {{ placeholder }}
+                    </span>
+    
+                    <div v-else class="flex flex-wrap items-center gap-2">
+                        <template v-if="isMultiple">
+                            <span v-for="item in currentSelection" :key="props.returnType === 'value' ? item : item.value"
+                                class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                                {{ getDisplayLabel(item) }}
+                                <button type="button" class="ml-1 text-blue-700 hover:text-blue-900"
+                                    @click.stop="removeOption(props.returnType === 'value' ? { value: item } : item)">
+                                    &times;
+                                </button>
+                            </span>
+                        </template>
+                        <template v-else>
+                            <span>{{ getDisplayLabel(currentSelection) }}</span>
+                        </template>
+                    </div>
                 </div>
 
                 <Icon v-if="loading" icon="spinner" class="animate-spin" />
@@ -391,8 +398,7 @@ watch(filteredOptions, () => {
                                 isSelected(option) ? 'bg-gray-900 font-medium text-blue-800' : 'dark:text-gray-50',
                             ]" @click="selectOption(option)">
                                 <div class="flex items-center gap-3">
-                                    <img v-if="option.img" :src="option.img" alt=""
-                                        class="h-6 w-6 rounded-full object-cover" />
+                                    <img v-if="option.img" :src="option.img" alt="" class="h-6 w-6 rounded-full object-cover" />
                                     <div class="flex flex-col">
                                         <span>{{ option.label }}</span>
                                         <span v-if="option.preview" class="text-xs text-gray-400">
@@ -421,8 +427,7 @@ watch(filteredOptions, () => {
                             isSelected(option) ? 'bg-gray-900 font-medium text-blue-800' : 'dark:text-gray-50',
                         ]" @click="selectOption(option)">
                             <div class="flex items-center gap-3">
-                                <img v-if="option.img" :src="option.img" alt=""
-                                    class="h-6 w-6 rounded-full object-cover" />
+                                <img v-if="option.img" :src="option.img" alt="" class="h-6 w-6 rounded-full object-cover" />
                                 <div class="flex flex-col">
                                     <span>{{ option.label }}</span>
                                     <span v-if="option.preview" class="text-xs text-gray-400">
