@@ -16,11 +16,12 @@ export const useUsersStore = defineStore('users', () => {
         { title : 'state', key : 'deleted_at' },
     ]
     const users = ref([])
+    
     const user = ref({
         information : {},
-        profile : {}
     })
     const copy_user = ref({})
+    const profiles = ref([])
     const picture = ref(null)
     const change = ref(false)
     const loading = ref({
@@ -41,6 +42,23 @@ export const useUsersStore = defineStore('users', () => {
         upload : [],
         delete : [],
     })
+
+    const getProfiles = async() => {
+        loading.value.fetch = true
+        try {
+            const response = await axios.get('/admin/profiles')
+            profiles.value = response.data.profiles.map(profile => {
+                return {
+                    label : profile.name,
+                    value : profile.id
+                }
+            })
+        } catch (error) {
+
+        } finally {
+            loading.value.fetch = false
+        }
+    }
 
     const fetch = async() => {
         loading.value.fetch = true
@@ -89,7 +107,7 @@ export const useUsersStore = defineStore('users', () => {
         try {
             if(!hasChanged(user.value,copy_user.value,)) return
 
-            const response = await axios.put('admin/user/' + auth.user.id , user.value.information)
+            const response = await axios.put('admin/user/' + user.value.id , user.value)
             auth.verifyAuth
             setToast(response.data.message,'success')
 
@@ -202,12 +220,15 @@ export const useUsersStore = defineStore('users', () => {
         headers,
         users,
         user,
+        profiles,
+        picture,
         change,
         loading,
         modal,
         errors,
 
         fetch,
+        getProfiles,
         show,
         store,
         update,

@@ -1,18 +1,34 @@
 <script setup>
-import Avatar from '@/components/Avatar.vue'
-import Upload from '@/components/Upload.vue'
-import { formatVal, hasErrorField } from '@/helpers'
-import { useProfileStore } from '@/stores/profile'
-import { onMounted } from 'vue'
+    import Avatar from '@/components/Avatar.vue'
+    import Upload from '@/components/Upload.vue'
+    import { formatVal, hasErrorField } from '@/helpers'
+    import { useProfileStore } from '@/stores/profile'
+    import { onMounted } from 'vue'
 
-const store = useProfileStore()
+    const store = useProfileStore()
 
+    const darkModeSystem = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
+    const changeThemeToDark = () => {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('color-theme', 'dark');
+    }
+    const changeThemeToLight = () => {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('color-theme', 'light');
+    }
+    const changeThemeToSystem = () => {
+        if(darkModeSystem === 'dark') {
+            changeThemeToDark();
+        } else {
+            changeThemeToLight();
+        }
+        localStorage.removeItem('color-theme');
+    }
 
-onMounted(() => {
-    store.fetch()
-})
-
+    onMounted(() => {
+        store.fetch()
+    })
 
 </script>
 <template>
@@ -20,7 +36,12 @@ onMounted(() => {
         <div class="col-span-full xl:col-auto">
             <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
                 <div class="items-center sm:flex xl:block 2xl:flex sm:space-x-4 xl:space-x-0 2xl:space-x-4">                    
-                    <Avatar v-if="!store.change" :url="store.information.url_photo" shape="square" class="size-28" />
+                    <Avatar v-if="!store.change" 
+                        :url="store.information.url_photo" 
+                        :defaultValue="store.information.small_name" 
+                        shape="square" 
+                        class="size-28" 
+                    />
                     <Upload v-if="store.change"
                         accept="image/*" 
                         @sendFile="store.getFile" 
@@ -64,6 +85,25 @@ onMounted(() => {
                             </div>
                         </li>
                     </ul>
+                </div>
+            </div>
+            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+                <div class="flow-root">
+                    <h3 class="text-xl font-semibold dark:text-white">Themes</h3>
+                    <div class="flex justify-around items-center gap-4 mt-4 border border-gray-400 p-4 btn">
+                        <div @click="changeThemeToLight()" class="cursor-pointer hover:font-bold dark:text-gray-200 text-gray-800">
+                            <Icon icon="sun"/>
+                            <span>Light</span>
+                        </div>
+                        <div @click="changeThemeToDark()" class="cursor-pointer hover:font-bold dark:text-gray-200 text-gray-800">
+                            <Icon icon="moon"/>
+                            <span>Dark</span>
+                        </div>
+                        <div @click="changeThemeToSystem()" class="cursor-pointer hover:font-bold dark:text-gray-200 text-gray-800">
+                            <Icon icon="desktop"/>
+                            <span>System</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

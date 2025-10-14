@@ -21,7 +21,7 @@
         <template #tbody="{items}">
             <tr v-for="item in items" 
                 @click="router.push({ name : 'User edit', params : { id : item.id } })"
-                class="hover:bg-gray-800 cursor-pointer">
+                class="dark:hover:bg-gray-800 hover:bg-gray-200 text-gray-600 dark:text-gray-200 cursor-pointer">
                 <td>
                     <div class="flex items-center gap-2">
                         <Avatar 
@@ -106,6 +106,6 @@
 <style scoped>
 @reference 'tailwindcss';
     td {
-        @apply text-gray-800 dark:text-gray-300 px-6 py-4;
+        @apply px-6 py-4;
     }
 </style>

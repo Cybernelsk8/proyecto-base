@@ -1,7 +1,7 @@
 <script setup>
 import Avatar from '@/components/Avatar.vue'
 import Upload from '@/components/Upload.vue'
-import { formatVal, hasErrorField } from '@/helpers'
+import { hasErrorField } from '@/helpers'
 import { useUsersStore } from '@/stores/admin/users'
 import { onMounted } from 'vue'
 
@@ -14,7 +14,10 @@ const props = defineProps({
     }
 })
 
-onMounted(() => store.show(props.id))
+onMounted(() => { 
+    store.show(props.id)
+    store.getProfiles()
+})
 
 </script>
 <template>
@@ -82,13 +85,10 @@ onMounted(() => store.show(props.id))
                             <Icon icon="person-dress" class="text-fuchsia-500" />
                         </div>
                         <div class="col-span-6">
-                            <Select v-model="store.user.profile.id"
+                            <Select v-model="store.user.profile_id"
                                 label="Profile"
                                 icon="id-card-clip"
-                                :options="[
-                                    { label : '', value : null },
-                                    { label : 'Sysadmin', value : 1 },
-                                ]"
+                                :options="store.profiles"
                                 return-type="value"
                             />
                         </div>

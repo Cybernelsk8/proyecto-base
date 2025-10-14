@@ -302,7 +302,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <section class="px-4 lg:px-7 grid gap-4">
+    <section class="px-4 lg:px-7 grid gap-4 text-black dark:text-gray-300">
         <div class="md:flex md:items-center md:justify-between">
             <div class="inline-flex items-center px-2 py-1.5 gap-2">
                 <span>Mostrar</span>
@@ -449,7 +449,7 @@ onMounted(() => {
                             :width="head.width" 
                             :hidden="head.hidden">
                             <slot :name="head.key" :item="item">
-                                <div :class="`uppercase text-xs dark:text-gray-300 ${head.class}`">
+                                <div :class="`uppercase text-xs ${head.class}`">
                                     <Icon v-if="head.icon" :icon="head.icon" />
                                     <span>{{ formatVal(getNestedValue(item, head.key), head.type) }} </span>
                                     <span>{{ head.text ?? '' }}</span>
@@ -548,11 +548,11 @@ onMounted(() => {
     @reference 'tailwindcss';
 
     td {
-        @apply text-gray-800 dark:text-gray-300 px-6 py-4;
+        @apply px-6 py-4;
     }
 
     th {
-        @apply font-semibold uppercase px-6 py-3;
+        @apply font-bold uppercase px-6 py-3;
     }
 
     .select-normal {

@@ -51,7 +51,7 @@ class UserController extends Controller
 
             $user = User::create([
                 'username' => $request->cui,
-                'password' => Hash::make('password')
+                'password' => Hash::make('password'),
             ]);
 
             $user->information()->create([
@@ -102,29 +102,32 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user) {
         $request->validate([
-            'first_name' => 'required|string|max:60',
-            'last_name' => 'required|string|max:60',
-            'cui' => ['required', 'numeric', 'digits:13','unique:user_information,cui,'.$request->id],
-            'gender' => 'required|in:F,M',
-            'birthday' => 'required|date|date_format:Y-m-d',
-            'email' => ['required', 'email', Rule::unique('user_information', 'email')->ignore($request->id, 'id')],
-            'phone' => 'required|numeric|digits:8',
-            'city' => 'nullable|string|max:60',
-            'address' => 'nullable|string|max:255',
+            'information.first_name' => 'required|string|max:60',
+            'information.last_name' => 'required|string|max:60',
+            'information.cui' => 'required|numeric|digits:13|unique:user_information,cui,'.$request->information['id'],
+            'information.gender' => 'required|in:F,M',
+            'information.birthday' => 'required|date|date_format:Y-m-d',
+            'information.email' => 'required|email|unique:user_information,email,'.$request->information['id'],
+            'information.phone' => 'required|numeric|digits:8',
+            'information.city' => 'nullable|string|max:60',
+            'information.address' => 'nullable|string|max:255',
         ]);
 
         try {
 
-            $user->information->first_name = $request->first_name;
-            $user->information->last_name = $request->last_name;
-            $user->information->cui = $request->cui;
-            $user->information->gender = $request->gender;
-            $user->information->birthday = $request->birthday;
-            $user->information->email = $request->email;
-            $user->information->phone = $request->phone;
-            $user->information->city = $request->city ?? null;
-            $user->information->address = $request->address ?? null;
+            $user->information->first_name = $request->information['first_name'];
+            $user->information->last_name = $request->information['last_name'];
+            $user->information->cui = $request->information['cui'];
+            $user->information->gender = $request->information['gender'];
+            $user->information->birthday = $request->information['birthday'];
+            $user->information->email = $request->information['email'];
+            $user->information->phone = $request->information['phone'];
+            $user->information->city = $request->information['city'] ?? null;
+            $user->information->address = $request->information['address'] ?? null;
             $user->information->save();
+
+            $user->profile_id = $request->profile_id ?? null;
+            $user->save();
 
             return response([
                 'message' => 'Data updated successfully.'

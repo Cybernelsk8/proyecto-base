@@ -35,7 +35,7 @@ watch(() => route.name, (newRouteName) => {
 </script>
 
 <template>
-    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar"
+    <button
         type="button"
         class="inline-flex items-center p-2 mt-2 ms-3 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
         <span class="sr-only">Abrir barra lateral</span>
@@ -109,9 +109,9 @@ watch(() => route.name, (newRouteName) => {
 </template>
 
 <style scoped>
-@reference 'tailwindcss';
+    @reference 'tailwindcss';
 
-:deep(svg) {
-    @apply transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white;
-}
+    :deep(svg) {
+        @apply transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white;
+    }
 </style>

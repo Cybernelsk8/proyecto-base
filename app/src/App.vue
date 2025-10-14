@@ -1,14 +1,12 @@
 <script setup>
-	import { onBeforeMount } from 'vue'
+	import { onMounted } from 'vue'
 	import { useAuthStore } from './stores/auth'
 	import { useGlobalStore } from './stores/global'
 	import Toast from './components/Toast.vue'
 	const global = useGlobalStore()
 	const auth = useAuthStore()
-
 	
-
-	onBeforeMount(() => {
+	onMounted(() => {
 		auth.verifyAuth()
 	})
 </script>
