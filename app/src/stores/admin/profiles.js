@@ -3,20 +3,20 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { hasChanged, setToast } from '@/helpers'
 
-export const useRolesStore = defineStore('roles', () => {
+export const useProfilesStore = defineStore('profiles', () => {
 
     const headers = [
         { title : 'id', key : 'id', type : 'numeric' },
         { title : 'name', key : 'name' },
+        { title : 'description', key : 'description' },
+        { title : 'menu', key : 'menu.name' },
+        { title : 'role', key : 'role.name' },
         { title : 'status', key : 'state' },
         { title : '', key : 'actions', width : '100px', class : 'text-end' },
     ]
-    const roles = ref([])
-    const permissions = ref([])
-    const selectedPermissions = ref([])
-    const copy_selectedPermissions = ref([])
-    const role = ref({})
-    const copy_role = ref({})
+    const profiles = ref([])
+    const profile = ref({})
+    const copy_profile = ref({})
     const loading = ref({
         fetch : false,
         store : false,
@@ -33,9 +33,8 @@ export const useRolesStore = defineStore('roles', () => {
     const fetch = async() => {
         loading.value.fetch = true
         try {
-            const response = await axios.get('/admin/role')
-            roles.value = response.data.roles
-            permissions.value = response.data.permissions
+            const response = await axios.get('/admin/profile')
+            profiles.value = response.data.profiles
         } catch (error) {
 
         } finally {
@@ -46,12 +45,9 @@ export const useRolesStore = defineStore('roles', () => {
     const store = async() => {
         loading.value.store = true
         try {
-            const response = await axios.post('/admin/role',{
-                name : role.value.name,
-                permissions : selectedpermissions.value
-            })
+            const response = await axios.post('/admin/profile',profile.value)
             setToast(response.data.message,'success')
-            roles.value.unshift(response.data.role)
+            profiles.value.unshift(response.data.profile)
             resetData()
         } catch (error) {
             if(error.response.status == 422) {
@@ -63,21 +59,16 @@ export const useRolesStore = defineStore('roles', () => {
     }
 
     const edit = (item) => {
-        role.value = item
-        copy_role.value = JSON.parse(JSON.stringify(item))
-        selectedPermissions.value = item.permissions.map(permission => permission.id)
-        copy_selectedPermissions.value = JSON.parse(JSON.stringify(selectedPermissions.value))
+        profile.value = item
+        copy_profile.value = JSON.parse(JSON.stringify(item))
         modal.value.edit = true
     }
 
     const update = async() => {
         loading.value.update = true
         try {
-            if(hasChanged(role.value, copy_role.value) || hasChanged(selectedPermissions.value, copy_selectedPermissions.value)) {
-                const response = await axios.put('/admin/role/' + role.value.id,{
-                    name : role.value.name,
-                    permissions : selectedPermissions.value
-                })
+            if(hasChanged(profile.value, copy_profile.value)) {
+                const response = await axios.put('/admin/profile/' + profile.value.id,profile.value)
                 setToast(response.data.message,'success')
             }
             resetData()
@@ -91,7 +82,7 @@ export const useRolesStore = defineStore('roles', () => {
     }
 
     const deleteItem = (item) => {
-        role.value = item
+        profile.value = item
         modal.value.delete = true
     }
 
@@ -99,12 +90,12 @@ export const useRolesStore = defineStore('roles', () => {
         loading.value.destroy = true
         try {
             
-            const response = await axios.delete('/admin/role/' + role.value.id)
+            const response = await axios.delete('/admin/profile/' + profile.value.id)
             
-            const index = roles.value.findIndex(role => role.id === response.data.role.id)
+            const index = profiles.value.findIndex(profile => profile.id === response.data.profile.id)
 
             if (index !== -1) {
-                roles.value.splice(index, 1)
+                profiles.value.splice(index, 1)
             }
 
             setToast(response.data.message,'success')
@@ -119,25 +110,20 @@ export const useRolesStore = defineStore('roles', () => {
     }
 
     const resetData = () => {
-        role.value = {}
-        copy_role.value = {}
+        profile.value = {}
+        copy_profile.value = {}
         modal.value = {
             new : false,
             edit : false,
             delete : false,
         }
-        selectedPermissions.value = []
-        copy_selectedPermissions.value = []
         errors.value = []
     }
     
     return {
         headers,
-        roles,
-        permissions,
-        selectedPermissions,
-        copy_selectedPermissions,
-        role,
+        profiles,
+        profile,
         loading,
         modal,
         errors,

@@ -73,6 +73,22 @@ const routes = [
                             requiresAuth : true
                         } 
                     },
+                    { 
+                        path: 'permissions', 
+                        name: 'Permissions', 
+                        component: () => import('@/views/admin/Permissions.vue'),
+                        meta : {
+                            requiresAuth : true
+                        } 
+                    },
+                    { 
+                        path: 'profiles', 
+                        name: 'Profiles', 
+                        component: () => import('@/views/admin/Profiles.vue'),
+                        meta : {
+                            requiresAuth : true
+                        } 
+                    },
                 ] 
             },
             

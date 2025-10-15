@@ -1,19 +1,19 @@
 <script setup>
-    import { onMounted } from 'vue';
+    import { onMounted } from 'vue'
     import { useRolesStore } from '@/stores/admin/roles'
+    import { can, hasErrorField } from '@/helpers'
     const store = useRolesStore()
 
     onMounted(() => {
         store.fetch()
-        store.getPermissions()
     })
 </script>
 <template>
-    <div class="flex justify-center">
+    <div v-if="can('store role')" class="flex justify-center">
         <Button @click="store.modal.new = true" text="New role" icon="plus" class="btn-primary" />
     </div>
 
-    <Data-Table :headers="store.headers" :data="store.roles" :loading="store.loading.fetch">
+    <Data-Table v-if="can('view list roles')" :headers="store.headers" :data="store.roles" :loading="store.loading.fetch">
         <template #state="{item}">
             <Icon :icon="item ? 'check' : 'xmark'" :class="item ? 'text-green-500' : 'text-red-500'" />
         </template>
@@ -22,8 +22,8 @@
                 icon="ellipsis-vertical" 
                 variant="btn-alternative"
                 :items="[
-                    { label : 'Edit', icon : 'edit', action : () => store.edit(item) },
-                    { label : 'Delete', icon : 'trash', action : () => store.deleteItem(item) },
+                    { label : 'Edit', icon : 'edit', action : () => store.edit(item), can : can('edit role') },
+                    { label : 'Delete', icon : 'trash', action : () => store.deleteItem(item), can : can('delete role') },
                 ]"
             />
         </template>
@@ -34,20 +34,22 @@
             <Button @click="store.resetData" icon="xmark" clas="btn-light" />
         </template>
 
-        <Input v-model="store.role.name" label="Name" required />           
+        <Input v-model="store.role.name" label="Name" required :error="hasErrorField(store.errors,'name')" />           
         <fieldset class="border rounded-lg border-gray-500 p-4">
             <legend class="px-4 font-medium text-2xl">Seleceted permissions</legend>
-            <div class="grid grid-cols-2 justify-items-center xl:grid-cols-4 gap-4">
-                <label v-for="permission in store.permissions" class="flex items-center gap-2 cursor-pointer">
-                    <input v-model="store.selectedPermissions" :value="permission.id" type="checkbox" class="w-4 h-4">
-                    <div class="grid">
-                        <span>{{ permission.name }}</span>
-                        <span class="text-[9px]">({{ permission.type }})</span>
-                    </div>
-                </label>
-            </div>
+            <details v-for="(module,index) in store.permissions"
+                class=" border rounded-lg border-gray-300 p-4 mt-4">
+                <summary class=" uppercase font-medium text-nowrap cursor-pointer">{{'module ' + index }}</summary>
+                <br>
+                <div class="grid grid-cols-4 gap-4">
+                    <label v-for="permission in module" class="flex items-center gap-2 cursor-pointer">
+                        <input v-model="store.selectedPermissions" :value="permission.id" type="checkbox" class="w-4 h-4">
+                        <span class="text-nowrap text-xs">{{ permission.name }}</span>
+                    </label>
+                </div>
+            </details>
         </fieldset>
-
+        <Validate-Errors :errors="store.errors" v-if="store.errors != 0" />
         <template #footer>
             <Button @click="store.store()" text="Save" icon="save" class="btn-primary" :loading="store.loading.store" />
             <Button @click="store.resetData" text="Cancel" icon="xmark" class="btn-alternative" />
@@ -59,19 +61,22 @@
             <Button @click="store.resetData" icon="xmark" clas="btn-light" />
         </template>
 
-        <Input v-model="store.role.name" label="Name" required />           
+        <Input v-model="store.role.name" label="Name" required :error="hasErrorField(store.errors,'name')" />           
         <fieldset class="border rounded-lg border-gray-500 p-4">
-            <legend class="px-4 font-medium text-2xl">Seleceted pages</legend>
-            <div class="grid grid-cols-2 justify-items-center xl:grid-cols-4 gap-4">
-                <label v-for="page in store.pages" class="flex items-center gap-2 cursor-pointer">
-                    <input v-model="store.selectedPages" :value="page.id" type="checkbox" class="w-4 h-4">
-                    <div class="grid">
-                        <span>{{ page.label }}</span>
-                        <span class="text-[9px]">({{ page.type }})</span>
-                    </div>
-                </label>
-            </div>
+            <legend class="px-4 font-medium text-2xl">Seleceted permissions</legend>
+            <details v-for="(module,index) in store.permissions"
+                class=" border rounded-lg border-gray-300 p-4 mt-4">
+                <summary class=" uppercase font-medium text-nowrap cursor-pointer">{{'module ' + index }}</summary>
+                <br>
+                <div class="grid grid-cols-4 gap-4">
+                    <label v-for="permission in module" class="flex items-center gap-2 cursor-pointer">
+                        <input v-model="store.selectedPermissions" :value="permission.id" type="checkbox" class="w-4 h-4">
+                        <span class="text-nowrap text-xs">{{ permission.name }}</span>
+                    </label>
+                </div>
+            </details>
         </fieldset>
+        <Validate-Errors :errors="store.errors" v-if="store.errors != 0" />
         <template #footer>
             <Button @click="store.update()" text="Update" icon="arrows-rotate" class="btn-primary" :loading="store.loading.update" />
             <Button @click="store.resetData" text="Cancel" icon="xmark" class="btn-alternative" />

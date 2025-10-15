@@ -1,7 +1,7 @@
 <script setup>
 import Avatar from '@/components/Avatar.vue'
 import Upload from '@/components/Upload.vue'
-import { hasErrorField } from '@/helpers'
+import { can, hasErrorField } from '@/helpers'
 import { useUsersStore } from '@/stores/admin/users'
 import { onMounted } from 'vue'
 
@@ -45,7 +45,7 @@ onMounted(() => {
                 </div>
             </div>
             
-            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+            <div v-if="can('reset password')" class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
                 <h3 class="mb-4 text-xl font-semibold dark:text-white">Reset password</h3>
                 <Button @click="store.resetPassword" text="Yes, reset" icon="key" class="btn-primary" :loading="store.loading.pass" />
             </div>
@@ -92,7 +92,7 @@ onMounted(() => {
                                 return-type="value"
                             />
                         </div>
-                        <div class="col-span-6 sm:col-full">
+                        <div v-if="can('edit user')" class="col-span-6 sm:col-full">
                             <Button
                                 type="submit" 
                                 text="Save all" 
@@ -105,7 +105,7 @@ onMounted(() => {
                     </div>
                 </form>
             </div>
-            <div class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
+            <div v-if="can('delete user')" class="p-4 mb-4 bg-white border border-gray-200 rounded-lg shadow-sm 2xl:col-span-2 dark:border-gray-700 sm:p-6 dark:bg-gray-800">
                 <div class="space-y-2">
                     <h3 class="text-xl font-semibold dark:text-white">Disabled this user</h3>
                     <p>Once you disabled a user, there is no going back. Please be certain.</p>

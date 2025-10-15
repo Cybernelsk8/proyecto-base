@@ -21,6 +21,7 @@ import Select from './components/Select.vue'
 import DataTableServerSide from './components/DataTable/DataTableServerSide.vue'
 import DataTable from './components/DataTable/DataTable.vue'
 import Toggle from './components/Toggle.vue'
+import TextArea from './components/TextArea.vue'
 
 const app = createApp(App)
 
@@ -35,6 +36,7 @@ app.component('Icon',FontAwesomeIcon)
 .component('Drop-Down',DropDown)
 .component('Toggle',Toggle)
 .component('Modal',Modal)
+.component('Text-Area',TextArea)
 .component('DataTable-ServerSide',DataTableServerSide)
 .component('Data-Table',DataTable)
 .component('Validate-Errors',ValidateErrors)

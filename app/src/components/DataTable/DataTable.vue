@@ -380,7 +380,7 @@ onMounted(() => {
         </div>
 
         <!-- Vista móvil -->
-        <div class="grid gap-4 lg:hidden py-4">
+        <div class="grid gap-4 lg:hidden py-4 w-max">
             <div v-for="item in paginatedData" :key="item.id" class="dark:bg-gray-800 p-2 rounded-xl">
                 <table class="w-full">
                     <tr v-if="props.multiple">
@@ -399,9 +399,11 @@ onMounted(() => {
                             :width="head.width" 
                             :hidden="head.hidden">
                             <slot :name="head.key" :item="item">
-                                <p :class="head.class ?? 'text-sm'">
-                                    {{ formatVal(getNestedValue(item, head.key), head.type) }}
-                                </p>
+                                <div :class="`uppercase text-xs ${head.class}`">
+                                    <Icon v-if="head.icon" :icon="head.icon" />
+                                    <span>{{ formatVal(getNestedValue(item, head.key), head.type) }} </span>
+                                    <span>{{ head.text ?? '' }}</span>
+                                </div>
                             </slot>
                         </td>
                     </tr>

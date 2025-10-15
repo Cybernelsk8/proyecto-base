@@ -58,6 +58,10 @@ const props = defineProps({
     icon : {
         type : String,
         default : null,
+    },
+    error : {
+        type : Boolean,
+        default : false
     }
 })
 
@@ -331,7 +335,7 @@ watch(filteredOptions, () => {
                 :disabled="isDisabled" 
                 :class="[
                     'flex w-full items-center justify-between p-2 input transition-all',
-                    'hover:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500',
+                    props.error ? 'input-error' : 'input-primary',
                     isDisabled ? 'cursor-not-allowed bg-gray-100 opacity-70' : 'cursor-pointer',
                     { 'border-blue-500 ring-1 ring-blue-500': isOpen },
                 ]" 

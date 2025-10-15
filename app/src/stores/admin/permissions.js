@@ -3,20 +3,18 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { hasChanged, setToast } from '@/helpers'
 
-export const useRolesStore = defineStore('roles', () => {
+export const usePermissionsStore = defineStore('permissions', () => {
 
     const headers = [
         { title : 'id', key : 'id', type : 'numeric' },
         { title : 'name', key : 'name' },
-        { title : 'status', key : 'state' },
+        { title : 'module', key : 'module' },
+        { title : 'guard', key : 'guard_name' },
         { title : '', key : 'actions', width : '100px', class : 'text-end' },
     ]
-    const roles = ref([])
     const permissions = ref([])
-    const selectedPermissions = ref([])
-    const copy_selectedPermissions = ref([])
-    const role = ref({})
-    const copy_role = ref({})
+    const permission = ref({})
+    const copy_permission = ref({})
     const loading = ref({
         fetch : false,
         store : false,
@@ -33,8 +31,7 @@ export const useRolesStore = defineStore('roles', () => {
     const fetch = async() => {
         loading.value.fetch = true
         try {
-            const response = await axios.get('/admin/role')
-            roles.value = response.data.roles
+            const response = await axios.get('/admin/permission')
             permissions.value = response.data.permissions
         } catch (error) {
 
@@ -46,12 +43,9 @@ export const useRolesStore = defineStore('roles', () => {
     const store = async() => {
         loading.value.store = true
         try {
-            const response = await axios.post('/admin/role',{
-                name : role.value.name,
-                permissions : selectedpermissions.value
-            })
+            const response = await axios.post('/admin/permission',permission.value)
             setToast(response.data.message,'success')
-            roles.value.unshift(response.data.role)
+            permissions.value.unshift(response.data.permission)
             resetData()
         } catch (error) {
             if(error.response.status == 422) {
@@ -63,21 +57,16 @@ export const useRolesStore = defineStore('roles', () => {
     }
 
     const edit = (item) => {
-        role.value = item
-        copy_role.value = JSON.parse(JSON.stringify(item))
-        selectedPermissions.value = item.permissions.map(permission => permission.id)
-        copy_selectedPermissions.value = JSON.parse(JSON.stringify(selectedPermissions.value))
+        permission.value = item
+        copy_permission.value = JSON.parse(JSON.stringify(item))
         modal.value.edit = true
     }
 
     const update = async() => {
         loading.value.update = true
         try {
-            if(hasChanged(role.value, copy_role.value) || hasChanged(selectedPermissions.value, copy_selectedPermissions.value)) {
-                const response = await axios.put('/admin/role/' + role.value.id,{
-                    name : role.value.name,
-                    permissions : selectedPermissions.value
-                })
+            if(hasChanged(permission.value, copy_permission.value)) {
+                const response = await axios.put('/admin/permission/' + permission.value.id, permission.value)
                 setToast(response.data.message,'success')
             }
             resetData()
@@ -91,7 +80,7 @@ export const useRolesStore = defineStore('roles', () => {
     }
 
     const deleteItem = (item) => {
-        role.value = item
+        permission.value = item
         modal.value.delete = true
     }
 
@@ -99,12 +88,12 @@ export const useRolesStore = defineStore('roles', () => {
         loading.value.destroy = true
         try {
             
-            const response = await axios.delete('/admin/role/' + role.value.id)
+            const response = await axios.delete('/admin/permission/' + permission.value.id)
             
-            const index = roles.value.findIndex(role => role.id === response.data.role.id)
+            const index = permissions.value.findIndex(permission => permission.id === response.data.permission.id)
 
             if (index !== -1) {
-                roles.value.splice(index, 1)
+                permissions.value.splice(index, 1)
             }
 
             setToast(response.data.message,'success')
@@ -119,25 +108,21 @@ export const useRolesStore = defineStore('roles', () => {
     }
 
     const resetData = () => {
-        role.value = {}
-        copy_role.value = {}
+        permission.value = {}
+        copy_permission.value = {}
         modal.value = {
             new : false,
             edit : false,
             delete : false,
         }
-        selectedPermissions.value = []
-        copy_selectedPermissions.value = []
         errors.value = []
     }
     
     return {
         headers,
-        roles,
         permissions,
-        selectedPermissions,
-        copy_selectedPermissions,
-        role,
+        permissions,
+        permission,
         loading,
         modal,
         errors,
