@@ -7,6 +7,9 @@
 	const auth = useAuthStore()
 	
 	onMounted(() => {
+		
+		if(window.location.pathname ==='/login') return
+
 		auth.verifyAuth()
 	})
 </script>
