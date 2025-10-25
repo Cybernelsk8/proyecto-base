@@ -4,6 +4,7 @@
     import { can, formatVal, hasErrorField } from '@/helpers'
     import Avatar from '@/components/Avatar.vue'
     import { useRouter } from 'vue-router'
+import Badge from '@/components/Badge.vue'
 
     const store = useUsersStore()
     const router = useRouter()
@@ -55,7 +56,7 @@
                     {{ formatVal(item.created_at,'date') }}
                 </td>
                 <td>
-                    {{ item.deleted_at ? 'Inactive' : 'Active' }}
+                    <Badge :text="!item.deleted_at ? 'Active' : 'Inactive'" :variant="!item.deleted_at ? 'green' : 'danger'" />
                 </td>
             </tr>
         </template>

@@ -51,10 +51,7 @@ const props = defineProps({
         type: Number,
         default: 10 // número de items visibles
     },
-    searching : {
-        type : Boolean,
-        default : true
-    },
+
     icon : {
         type : String,
         default : null,
@@ -370,8 +367,8 @@ watch(filteredOptions, () => {
 
             <div v-if="isOpen" ref="floating" :style="floatingStyles"
                 class="z-50 w-full overflow-hidden rounded-md border-2 border-gray-600 bg-gray-50 dark:bg-gray-800 shadow-lg">
-                <div class="p-2">
-                    <Input v-if="props.searching" 
+                <div class="p-2" v-if="props.options.length > 5">
+                    <Input 
                         icon="search" 
                         v-model="searchText" 
                         type="search" 

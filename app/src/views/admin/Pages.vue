@@ -18,7 +18,7 @@
             <Icon :icon="item.icon" class="text-xl text-gray-400" />
         </template>
         <template #state="{item}">
-            <Icon :icon="item ? 'check' : 'xmark'" :class="item ? 'text-green-500' : 'text-red-500'" />
+            <Badge :text="item.state ? 'Active' : 'Inactive'" :variant="item.state ? 'green' : 'red'" />
         </template>
         <template #actions="{item}">
             <Drop-Down 

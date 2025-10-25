@@ -8,7 +8,6 @@ export const useMenusStore = defineStore('menus', () => {
     const headers = [
         { title : 'id', key : 'id', type : 'numeric' },
         { title : 'name', key : 'name' },
-        { title : 'status', key : 'state' },
         { title : '', key : 'actions', width : '100px' },
     ]
     const menus = ref([])

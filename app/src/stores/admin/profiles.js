@@ -11,7 +11,6 @@ export const useProfilesStore = defineStore('profiles', () => {
         { title : 'description', key : 'description' },
         { title : 'menu', key : 'menu.name' },
         { title : 'role', key : 'role.name' },
-        { title : 'status', key : 'state' },
         { title : '', key : 'actions', width : '100px', class : 'text-end' },
     ]
     const profiles = ref([])

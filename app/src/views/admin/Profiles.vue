@@ -20,9 +20,6 @@
     </div>
 
     <Data-Table v-if="can('view list profiles')" :headers="store.headers" :data="store.profiles" :loading="store.loading.fetch">
-        <template #state="{item}">
-            <Icon :icon="item ? 'check' : 'xmark'" :class="item ? 'text-green-500' : 'text-red-500'" />
-        </template>
         <template #actions="{item}">
             <Drop-Down 
                 icon="ellipsis-vertical" 

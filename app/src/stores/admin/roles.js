@@ -8,7 +8,6 @@ export const useRolesStore = defineStore('roles', () => {
     const headers = [
         { title : 'id', key : 'id', type : 'numeric' },
         { title : 'name', key : 'name' },
-        { title : 'status', key : 'state' },
         { title : '', key : 'actions', width : '100px', class : 'text-end' },
     ]
     const roles = ref([])
